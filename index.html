@@ -140,7 +140,6 @@
       transition: background 0.15s, border-color 0.15s;
     }
 
-
     .player-row.biggest {
       border-color: #ff9500;
       background: rgba(255,149,0,0.08);
@@ -186,22 +185,6 @@
       text-align: right;
       padding-right: 4px;
       min-width: 80px;
-    }
-
-    .net-profit {
-      color: #34c759;
-      font-weight: 600;
-    }
-
-    .net-loss {
-      color: #ff3b30;
-      font-weight: 600;
-    }
-
-    .net-neutral {
-      color: #888888;
-      font-weight: 500;
-      font-size: 13px;
     }
 
     .summary-item {
@@ -261,6 +244,27 @@
       text-align: center;
       padding: 6px 12px 10px;
       color: #666;
+    }
+
+    .net-profit {
+      color: #34c759;
+      font-weight: 600;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .net-loss {
+      color: #ff3b30;
+      font-weight: 600;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .net-neutral {
+      color: #888888;
+      font-weight: 500;
+      font-size: 13px;
+      text-align: right;
     }
 
     /* Dark mode */
@@ -380,7 +384,6 @@
         <div>Total gasto</div>
         <div>Pos/Res</div>
       </div>
-
       <div id="playersContainer"></div>
       <div class="small-note">
         Os jogadores são ordenados pelo total gasto (do maior para o menor).
@@ -391,16 +394,16 @@
     <section class="card">
       <div class="card-title">Totais & prêmios</div>
       <div class="summary-item">
-        <span>Buy-ins</span><strong id="totalBuyIns">0</strong>
+        <span>Total de buy-ins</span><strong id="totalBuyIns">0</strong>
       </div>
       <div class="summary-item">
-        <span>Rebuys</span><strong id="totalRebuys">0</strong>
+        <span>Total de rebuys</span><strong id="totalRebuys">0</strong>
       </div>
       <div class="summary-item">
-        <span>R$ buy-ins</span><strong id="totalFromBuyIns">R$ 0,00</strong>
+        <span>Arrecadado em buy-ins</span><strong id="totalFromBuyIns">R$ 0,00</strong>
       </div>
       <div class="summary-item">
-        <span>R$ rebuys</span><strong id="totalFromRebuys">R$ 0,00</strong>
+        <span>Arrecadado em rebuys</span><strong id="totalFromRebuys">R$ 0,00</strong>
       </div>
       <div class="total-pot">
         Pote total: <span id="totalPot">R$ 0,00</span>
@@ -414,35 +417,34 @@
       <div class="summary-item">
         <span>2º lugar</span><strong id="prize2Amount">R$ 0,00</strong>
       </div>
-     <div class="summary-item">
-  <span>3º lugar</span><strong id="prize3Amount">R$ 0,00</strong>
-</div>
+      <div class="summary-item">
+        <span>3º lugar</span><strong id="prize3Amount">R$ 0,00</strong>
+      </div>
 
-<hr style="margin:12px 0;border:none;border-top:1px dashed #ddd;">
+      <hr style="margin:12px 0;border:none;border-top:1px dashed #ddd;">
 
-<div class="card-title" style="font-size:14px;margin-bottom:4px;">
-  Resumo do Dia
-</div>
+      <div class="card-title" style="font-size:14px;margin-bottom:4px;">
+        Resumo da rodada
+      </div>
 
-<textarea id="summaryText" readonly
-  style="width:100%;min-height:90px;border-radius:8px;border:1px solid #d0d0d4;
-         padding:6px 8px;font-size:13px;resize:vertical;">
-</textarea>
+      <textarea id="summaryText" readonly
+        style="width:100%;min-height:90px;border-radius:8px;border:1px solid #d0d0d4;
+               padding:6px 8px;font-size:13px;resize:vertical;">
+      </textarea>
 
-<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-  <button id="copySummary" class="btn"
-    style="flex:1;min-width:120px;background:#34c759;color:white;">
-    Copiar resumo
-  </button>
-  <a id="whatsSummary" class="btn"
-    style="flex:1;min-width:120px;text-align:center;text-decoration:none;background:#25d366;color:white;">
-    WhatsApp
-  </a>
-</div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <button id="copySummary" class="btn"
+          style="flex:1;min-width:120px;background:#34c759;color:white;">
+          Copiar resumo
+        </button>
+        <a id="whatsSummary" class="btn"
+          style="flex:1;min-width:120px;text-align:center;text-decoration:none;background:#25d366;color:white;">
+          WhatsApp
+        </a>
+      </div>
 
-<button id="recalcBtn" class="btn btn-primary">Recalcular</button>
-<div class="small-note">Tudo é recalculado automaticamente, mas você pode tocar em “Recalcular” a qualquer momento.</div>
-
+      <button id="recalcBtn" class="btn btn-primary">Recalcular</button>
+      <div class="small-note">Tudo é recalculado automaticamente, mas você pode tocar em “Recalcular” a qualquer momento.</div>
     </section>
   </main>
 
@@ -451,7 +453,7 @@
   </footer>
 
   <script>
-    const STORAGE_KEY = "poker_tracker_state_v2";
+    const STORAGE_KEY = "poker_tracker_state_v3";
     const THEME_KEY = "poker_tracker_theme";
 
     // Formatação de moeda BRL
@@ -474,177 +476,59 @@
       return moneyFormatter.format(v || 0);
     }
 
-  function defaultState() {
+    function defaultState() {
       return {
         settings: {
-        buyInValue: 100,
-        rebuyValue: 100,
-        prize1: 50,
-        prize2: 30,
-        prize3: 20,
+          buyInValue: 100,
+          rebuyValue: 100,
+          prize1: 50,
+          prize2: 30,
+          prize3: 20,
         },
-      players: Array.from({ length: 10 }, (_, i) => ({
-      id: i,
-      name: "",
-      buyIns: 0,
-      rebuys: 0,
-      position: 0 // 0 = sem posição, 1 = 1º, 2 = 2º, 3 = 3º
-    })),
-    };
-  }
-
-  function computeTotalsAndPrizes() {
-    const buyInValue = toNumber(state.settings.buyInValue);
-    const rebuyValue = toNumber(state.settings.rebuyValue);
-
-    let totalBuyIns = 0;
-    let totalRebuys = 0;
-
-  state.players.forEach((p) => {
-    totalBuyIns += toNumber(p.buyIns);
-    totalRebuys += toNumber(p.rebuys);
-  });
-
-  const totalFromBuyIns = totalBuyIns * buyInValue;
-  const totalFromRebuys = totalRebuys * rebuyValue;
-  const totalPot = totalFromBuyIns + totalFromRebuys;
-
-  const p1 = toNumber(state.settings.prize1);
-  const p2 = toNumber(state.settings.prize2);
-  const p3 = toNumber(state.settings.prize3);
-
-  let prize1Amount = (totalPot * p1) / 100;
-  let prize2Amount = (totalPot * p2) / 100;
-  let prize3Amount = (totalPot * p3) / 100;
-
-  const totalPrizes = prize1Amount + prize2Amount + prize3Amount;
-  const diff = totalPot - totalPrizes;
-  prize1Amount += diff; // joga resíduo no 1º lugar
-
-  return {
-    buyInValue,
-    rebuyValue,
-    totalBuyIns,
-    totalRebuys,
-    totalFromBuyIns,
-    totalFromRebuys,
-    totalPot,
-    prize1Amount,
-    prize2Amount,
-    prize3Amount,
-    p1,
-    p2,
-    p3,
-  };
-}
-  
-
-    function buildSummary() {
-  const {
-    buyInValue,
-    rebuyValue,
-    totalBuyIns,
-    totalRebuys,
-    totalFromBuyIns,
-    totalFromRebuys,
-    totalPot,
-    prize1Amount,
-    prize2Amount,
-    prize3Amount,
-    p1,
-    p2,
-    p3,
-  } = computeTotalsAndPrizes();
-
-  const playersLines = [];
-
-  state.players.forEach((p, i) => {
-    const name = p.name?.trim() || `Jogador ${i + 1}`;
-    const buyIns = toNumber(p.buyIns);
-    const rebuys = toNumber(p.rebuys);
-    if (buyIns === 0 && rebuys === 0 && !p.name) return;
-
-    const spent = buyIns * buyInValue + rebuys * rebuyValue;
-
-    let prize = 0;
-    if (p.position === 1) prize = prize1Amount;
-    if (p.position === 2) prize = prize2Amount;
-    if (p.position === 3) prize = prize3Amount;
-
-    const net = prize - spent;
-    const absNet = Math.abs(net);
-    const netMoney = formatMoney(absNet);
-    const netLabel = net > 0 ? `+${netMoney}` : net < 0 ? `-${netMoney}` : netMoney;
-
-    const posLabel = p.position ? `${p.position}º` : "-";
-
-    playersLines.push(
-      `${name}: ${buyIns} buy-in(s), ${rebuys} rebuy(s), gastou ${formatMoney(spent)}, posição ${posLabel}, prêmio ${formatMoney(prize)}, resultado ${netLabel}`
-    );
-  });
-
-  const lines = [];
-
-  lines.push(`Total buy-ins: ${totalBuyIns}`);
-  lines.push(`Total rebuys: ${totalRebuys}`);
-  .push(`Buy-in: ${formatMoney(buyInValue)} | Rebuy: ${formatMoney(rebuyValue)}`);
-  lines.push(`R$ Buy-ins: ${formatMoney(totalFromBuyIns)}`);
-  lines.push(`R$ rebuys: ${formatMoney(totalFromRebuys)}`);
-  lines.push(`POTE TOTAL: ${formatMoney(totalPot)}`);
-  lines.push("");
-  lines.push("Prêmios:");
-  lines.push(`1º lugar (${p1}%): ${formatMoney(prize1Amount)}`);
-  lines.push(`2º lugar (${p2}%): ${formatMoney(prize2Amount)}`);
-  lines.push(`3º lugar (${p3}%): ${formatMoney(prize3Amount)}`);
-  lines.push("");
-
-  if (playersLines.length) {
-    lines.push("Jogadores:");
-    lines.push(...playersLines);
-  }
-
-  return lines.join("\n");
-}
-
-
-
-    
-    function loadState() {
-      try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) return defaultState();
-    const parsed = JSON.parse(data);
-
-    let players = parsed.players;
-    if (!Array.isArray(players) || players.length !== 10) {
-      players = defaultState().players;
-    } else {
-      // garante que todos tenham os campos esperados
-      players = players.map((p, i) => ({
-        id: p.id ?? i,
-        name: p.name || "",
-        buyIns: p.buyIns ?? 0,
-        rebuys: p.rebuys ?? 0,
-        position: p.position ?? 0
-      }));
+        players: Array.from({ length: 10 }, (_, i) => ({
+          id: i,
+          name: "",
+          buyIns: 0,
+          rebuys: 0,
+          position: 0, // 0 = sem posição, 1 = 1º, 2 = 2º, 3 = 3º
+        })),
+      };
     }
 
-    return {
-      settings: {
-        buyInValue: parsed.settings?.buyInValue ?? 100,
-        rebuyValue: parsed.settings?.rebuyValue ?? 100,
-        prize1: parsed.settings?.prize1 ?? 50,
-        prize2: parsed.settings?.prize2 ?? 30,
-        prize3: parsed.settings?.prize3 ?? 20,
-      },
-      players,
-    };
-  } catch (e) {
-    console.error("Error loading state", e);
-    return defaultState();
-  }
-}
+    function loadState() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (!data) return defaultState();
+        const parsed = JSON.parse(data);
 
+        let players = parsed.players;
+        if (!Array.isArray(players) || players.length !== 10) {
+          players = defaultState().players;
+        } else {
+          players = players.map((p, i) => ({
+            id: p.id ?? i,
+            name: p.name || "",
+            buyIns: p.buyIns ?? 0,
+            rebuys: p.rebuys ?? 0,
+            position: p.position ?? 0,
+          }));
+        }
+
+        return {
+          settings: {
+            buyInValue: parsed.settings?.buyInValue ?? 100,
+            rebuyValue: parsed.settings?.rebuyValue ?? 100,
+            prize1: parsed.settings?.prize1 ?? 50,
+            prize2: parsed.settings?.prize2 ?? 30,
+            prize3: parsed.settings?.prize3 ?? 20,
+          },
+          players,
+        };
+      } catch (e) {
+        console.error("Error loading state", e);
+        return defaultState();
+      }
+    }
 
     function saveState(state) {
       try {
@@ -681,11 +565,11 @@
     const prize2AmountEl = document.getElementById("prize2Amount");
     const prize3AmountEl = document.getElementById("prize3Amount");
 
-    const themeToggleBtn = document.getElementById("themeToggle");
     const summaryTextEl = document.getElementById("summaryText");
     const copySummaryBtn = document.getElementById("copySummary");
     const whatsSummaryLink = document.getElementById("whatsSummary");
 
+    const themeToggleBtn = document.getElementById("themeToggle");
 
     // THEME
     function applyTheme(theme) {
@@ -736,6 +620,51 @@
       }
     }
 
+    function computeTotalsAndPrizes() {
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+
+      let totalBuyIns = 0;
+      let totalRebuys = 0;
+
+      state.players.forEach((p) => {
+        totalBuyIns += toNumber(p.buyIns);
+        totalRebuys += toNumber(p.rebuys);
+      });
+
+      const totalFromBuyIns = totalBuyIns * buyInValue;
+      const totalFromRebuys = totalRebuys * rebuyValue;
+      const totalPot = totalFromBuyIns + totalFromRebuys;
+
+      const p1 = toNumber(state.settings.prize1);
+      const p2 = toNumber(state.settings.prize2);
+      const p3 = toNumber(state.settings.prize3);
+
+      let prize1Amount = (totalPot * p1) / 100;
+      let prize2Amount = (totalPot * p2) / 100;
+      let prize3Amount = (totalPot * p3) / 100;
+
+      const totalPrizes = prize1Amount + prize2Amount + prize3Amount;
+      const diff = totalPot - totalPrizes;
+      prize1Amount += diff; // joga resíduo no 1º lugar
+
+      return {
+        buyInValue,
+        rebuyValue,
+        totalBuyIns,
+        totalRebuys,
+        totalFromBuyIns,
+        totalFromRebuys,
+        totalPot,
+        prize1Amount,
+        prize2Amount,
+        prize3Amount,
+        p1,
+        p2,
+        p3,
+      };
+    }
+
     function updatePlayer(originalIndex, newBuyIns, newRebuys) {
       const player = state.players[originalIndex];
       player.buyIns = Math.max(0, Math.floor(toNumber(newBuyIns, 0)));
@@ -744,269 +673,310 @@
       renderPlayers();
       recalc();
     }
+
     function setPositionForPlayer(playerIndex, newPos) {
-  // Garante exclusividade: só um jogador por posição
-  state.players.forEach((pl, i) => {
-    if (i !== playerIndex && pl.position === newPos && newPos !== 0) {
-      pl.position = 0;
-    }
-  });
-  state.players[playerIndex].position = newPos;
-  saveState(state);
-  renderPlayers();
-  recalc();
-}
-
-function renderPlayers() {
-  playersContainer.innerHTML = "";
-
-  const {
-    buyInValue,
-    rebuyValue,
-    prize1Amount,
-    prize2Amount,
-    prize3Amount,
-  } = computeTotalsAndPrizes();
-
-  const playersWithIndex = state.players.map((p, index) => {
-    const totalSpent = p.buyIns * buyInValue + p.rebuys * rebuyValue;
-    let prize = 0;
-    if (p.position === 1) prize = prize1Amount;
-    if (p.position === 2) prize = prize2Amount;
-    if (p.position === 3) prize = prize3Amount;
-    const net = prize - totalSpent;
-    return { ...p, index, totalSpent, prize, net };
-  });
-
-  const totals = playersWithIndex.map((p) => p.totalSpent);
-  const maxSpent = Math.max(...totals, 0);
-  const positiveTotals = totals.filter((v) => v > 0);
-  const minSpent = positiveTotals.length > 0 ? Math.min(...positiveTotals) : 0;
-
-  // Ordena do que mais gastou para o que menos gastou
-  playersWithIndex.sort((a, b) => b.totalSpent - a.totalSpent);
-
-  playersWithIndex.forEach((p) => {
-    const row = document.createElement("div");
-    row.className = "player-row";
-
-    if (p.totalSpent > 0 && p.totalSpent === maxSpent) {
-      row.classList.add("biggest");
-    }
-    if (p.totalSpent > 0 && p.totalSpent === minSpent && maxSpent !== minSpent) {
-      row.classList.add("smallest");
-    }
-
-    // Nome
-    const nameDiv = document.createElement("div");
-    const nameInput = document.createElement("input");
-    nameInput.type = "text";
-    nameInput.placeholder = "Jogador " + (p.index + 1);
-    nameInput.value = p.name || "";
-    nameInput.addEventListener("input", () => {
-      state.players[p.index].name = nameInput.value;
+      // Garante exclusividade: só um jogador por posição (1,2,3)
+      state.players.forEach((pl, i) => {
+        if (i !== playerIndex && pl.position === newPos && newPos !== 0) {
+          pl.position = 0;
+        }
+      });
+      state.players[playerIndex].position = newPos;
       saveState(state);
-    });
-    nameDiv.appendChild(nameInput);
-
-    // Buy-ins
-    const buyDiv = document.createElement("div");
-    const buyCounter = document.createElement("div");
-    buyCounter.className = "counter";
-
-    const buyMinus = document.createElement("button");
-    buyMinus.textContent = "–";
-
-    const buyInputEl = document.createElement("input");
-    buyInputEl.type = "number";
-    buyInputEl.min = "0";
-    buyInputEl.step = "1";
-    buyInputEl.value = p.buyIns;
-
-    const buyPlus = document.createElement("button");
-    buyPlus.textContent = "+";
-
-    buyCounter.appendChild(buyMinus);
-    buyCounter.appendChild(buyInputEl);
-    buyCounter.appendChild(buyPlus);
-    buyDiv.appendChild(buyCounter);
-
-    // Rebuys
-    const rebuyDiv = document.createElement("div");
-    const rebuyCounter = document.createElement("div");
-    rebuyCounter.className = "counter";
-
-    const rebuyMinus = document.createElement("button");
-    rebuyMinus.textContent = "–";
-
-    const rebuyInputEl = document.createElement("input");
-    rebuyInputEl.type = "number";
-    rebuyInputEl.min = "0";
-    rebuyInputEl.step = "1";
-    rebuyInputEl.value = p.rebuys;
-
-    const rebuyPlus = document.createElement("button");
-    rebuyPlus.textContent = "+";
-
-    rebuyCounter.appendChild(rebuyMinus);
-    rebuyCounter.appendChild(rebuyInputEl);
-    rebuyCounter.appendChild(rebuyPlus);
-    rebuyDiv.appendChild(rebuyCounter);
-
-    // Total gasto
-    const spentDiv = document.createElement("div");
-    const spentLabel = document.createElement("div");
-    spentLabel.className = "spent-label";
-    spentLabel.textContent = formatMoney(p.totalSpent);
-    spentDiv.appendChild(spentLabel);
-
-    // Posição + Resultado
-    const resultDiv = document.createElement("div");
-    resultDiv.style.display = "flex";
-    resultDiv.style.flexDirection = "column";
-    resultDiv.style.alignItems = "stretch";
-    resultDiv.style.gap = "2px";
-
-    const posSelect = document.createElement("select");
-    posSelect.style.width = "100%";
-    posSelect.style.borderRadius = "6px";
-    posSelect.style.border = "1px solid #d0d0d4";
-    posSelect.style.padding = "2px 4px";
-    posSelect.style.fontSize = "12px";
-
-    const optNone = document.createElement("option");
-    optNone.value = "0";
-    optNone.textContent = "-";
-    const opt1 = document.createElement("option");
-    opt1.value = "1";
-    opt1.textContent = "1º";
-    const opt2 = document.createElement("option");
-    opt2.value = "2";
-    opt2.textContent = "2º";
-    const opt3 = document.createElement("option");
-    opt3.value = "3";
-    opt3.textContent = "3º";
-
-    posSelect.appendChild(optNone);
-    posSelect.appendChild(opt1);
-    posSelect.appendChild(opt2);
-    posSelect.appendChild(opt3);
-    posSelect.value = String(p.position || 0);
-
-    posSelect.addEventListener("change", () => {
-      const newPos = parseInt(posSelect.value, 10) || 0;
-      setPositionForPlayer(p.index, newPos);
-    });
-
-    const netLabel = document.createElement("div");
-    const absNet = Math.abs(p.net || 0);
-    const netMoney = formatMoney(absNet);
-    if (p.net > 0) {
-      netLabel.textContent = "+" + netMoney;
-      netLabel.className = "net-profit";
-    } else if (p.net < 0) {
-      netLabel.textContent = "-" + netMoney;
-      netLabel.className = "net-loss";
-    } else {
-      netLabel.textContent = netMoney;
-      netLabel.className = "net-neutral";
+      renderPlayers();
+      recalc();
     }
 
-    resultDiv.appendChild(posSelect);
-    resultDiv.appendChild(netLabel);
+    function renderPlayers() {
+      playersContainer.innerHTML = "";
 
-    row.appendChild(nameDiv);
-    row.appendChild(buyDiv);
-    row.appendChild(rebuyDiv);
-    row.appendChild(spentDiv);
-    row.appendChild(resultDiv);
+      const {
+        buyInValue,
+        rebuyValue,
+        prize1Amount,
+        prize2Amount,
+        prize3Amount,
+      } = computeTotalsAndPrizes();
 
-    playersContainer.appendChild(row);
+      const playersWithIndex = state.players.map((p, index) => {
+        const totalSpent = p.buyIns * buyInValue + p.rebuys * rebuyValue;
+        let prize = 0;
+        if (p.position === 1) prize = prize1Amount;
+        if (p.position === 2) prize = prize2Amount;
+        if (p.position === 3) prize = prize3Amount;
+        const net = prize - totalSpent;
+        return { ...p, index, totalSpent, prize, net };
+      });
 
-    // Eventos de buy-in/rebuy
-    buyMinus.addEventListener("click", () => {
-      updatePlayer(p.index, state.players[p.index].buyIns - 1, state.players[p.index].rebuys);
-    });
-    buyPlus.addEventListener("click", () => {
-      updatePlayer(p.index, state.players[p.index].buyIns + 1, state.players[p.index].rebuys);
-    });
-    rebuyMinus.addEventListener("click", () => {
-      updatePlayer(p.index, state.players[p.index].buyIns, state.players[p.index].rebuys - 1);
-    });
-    rebuyPlus.addEventListener("click", () => {
-      updatePlayer(p.index, state.players[p.index].buyIns, state.players[p.index].rebuys + 1);
-    });
+      const totals = playersWithIndex.map((p) => p.totalSpent);
+      const maxSpent = Math.max(...totals, 0);
+      const positiveTotals = totals.filter((v) => v > 0);
+      const minSpent =
+        positiveTotals.length > 0 ? Math.min(...positiveTotals) : 0;
 
-    buyInputEl.addEventListener("change", () => {
-      updatePlayer(p.index, buyInputEl.value, state.players[p.index].rebuys);
-    });
-    rebuyInputEl.addEventListener("change", () => {
-      updatePlayer(p.index, state.players[p.index].buyIns, rebuyInputEl.value);
-    });
-  });
-}
+      // Ordena do que mais gastou para o que menos gastou
+      playersWithIndex.sort((a, b) => b.totalSpent - a.totalSpent);
 
- function recalc() {
-  const {
-    buyInValue,
-    rebuyValue,
-    totalBuyIns,
-    totalRebuys,
-    totalFromBuyIns,
-    totalFromRebuys,
-    totalPot,
-    prize1Amount,
-    prize2Amount,
-    prize3Amount,
-  } = computeTotalsAndPrizes();
+      playersWithIndex.forEach((p) => {
+        const row = document.createElement("div");
+        row.className = "player-row";
 
-  totalBuyInsEl.textContent = totalBuyIns;
-  totalRebuysEl.textContent = totalRebuys;
-  totalFromBuyInsEl.textContent = formatMoney(totalFromBuyIns);
-  totalFromRebuysEl.textContent = formatMoney(totalFromRebuys);
-  totalPotEl.textContent = formatMoney(totalPot);
+        if (p.totalSpent > 0 && p.totalSpent === maxSpent) {
+          row.classList.add("biggest");
+        }
+        if (p.totalSpent > 0 && p.totalSpent === minSpent && maxSpent !== minSpent) {
+          row.classList.add("smallest");
+        }
 
-  prize1AmountEl.textContent = formatMoney(prize1Amount);
-  prize2AmountEl.textContent = formatMoney(prize2Amount);
-  prize3AmountEl.textContent = formatMoney(prize3Amount);
+        // Nome
+        const nameDiv = document.createElement("div");
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.placeholder = "Jogador " + (p.index + 1);
+        nameInput.value = p.name || "";
+        nameInput.addEventListener("input", () => {
+          state.players[p.index].name = nameInput.value;
+          saveState(state);
+        });
+        nameDiv.appendChild(nameInput);
 
-  // Atualiza resumo e link de WhatsApp
-  const summary = buildSummary();
-  if (summaryTextEl) {
-    summaryTextEl.value = summary;
-  }
-  if (whatsSummaryLink) {
-    whatsSummaryLink.href = "https://wa.me/?text=" + encodeURIComponent(summary);
-  }
-}
-  
-  
-   
+        // Buy-ins
+        const buyDiv = document.createElement("div");
+        const buyCounter = document.createElement("div");
+        buyCounter.className = "counter";
 
-  if (copySummaryBtn) {
-  copySummaryBtn.addEventListener("click", async () => {
-    const text = summaryTextEl?.value || "";
-    if (!text) return;
+        const buyMinus = document.createElement("button");
+        buyMinus.textContent = "–";
 
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(text);
-        alert("Resumo copiado para a área de transferência.");
-      } else {
-        // fallback pra navegadores mais antigos
-        summaryTextEl.select();
-        document.execCommand("copy");
-        alert("Resumo copiado (modo compatibilidade).");
+        const buyInputEl = document.createElement("input");
+        buyInputEl.type = "number";
+        buyInputEl.min = "0";
+        buyInputEl.step = "1";
+        buyInputEl.value = p.buyIns;
+
+        const buyPlus = document.createElement("button");
+        buyPlus.textContent = "+";
+
+        buyCounter.appendChild(buyMinus);
+        buyCounter.appendChild(buyInputEl);
+        buyCounter.appendChild(buyPlus);
+        buyDiv.appendChild(buyCounter);
+
+        // Rebuys
+        const rebuyDiv = document.createElement("div");
+        const rebuyCounter = document.createElement("div");
+        rebuyCounter.className = "counter";
+
+        const rebuyMinus = document.createElement("button");
+        rebuyMinus.textContent = "–";
+
+        const rebuyInputEl = document.createElement("input");
+        rebuyInputEl.type = "number";
+        rebuyInputEl.min = "0";
+        rebuyInputEl.step = "1";
+        rebuyInputEl.value = p.rebuys;
+
+        const rebuyPlus = document.createElement("button");
+        rebuyPlus.textContent = "+";
+
+        rebuyCounter.appendChild(rebuyMinus);
+        rebuyCounter.appendChild(rebuyInputEl);
+        rebuyCounter.appendChild(rebuyPlus);
+        rebuyDiv.appendChild(rebuyCounter);
+
+        // Total gasto
+        const spentDiv = document.createElement("div");
+        const spentLabel = document.createElement("div");
+        spentLabel.className = "spent-label";
+        spentLabel.textContent = formatMoney(p.totalSpent);
+        spentDiv.appendChild(spentLabel);
+
+        // Posição + Resultado
+        const resultDiv = document.createElement("div");
+        resultDiv.style.display = "flex";
+        resultDiv.style.flexDirection = "column";
+        resultDiv.style.alignItems = "stretch";
+        resultDiv.style.gap = "2px";
+
+        const posSelect = document.createElement("select");
+        posSelect.style.width = "100%";
+        posSelect.style.borderRadius = "6px";
+        posSelect.style.border = "1px solid #d0d0d4";
+        posSelect.style.padding = "2px 4px";
+        posSelect.style.fontSize = "12px";
+
+        const optNone = document.createElement("option");
+        optNone.value = "0";
+        optNone.textContent = "-";
+        const opt1 = document.createElement("option");
+        opt1.value = "1";
+        opt1.textContent = "1º";
+        const opt2 = document.createElement("option");
+        opt2.value = "2";
+        opt2.textContent = "2º";
+        const opt3 = document.createElement("option");
+        opt3.value = "3";
+        opt3.textContent = "3º";
+
+        posSelect.appendChild(optNone);
+        posSelect.appendChild(opt1);
+        posSelect.appendChild(opt2);
+        posSelect.appendChild(opt3);
+        posSelect.value = String(p.position || 0);
+
+        posSelect.addEventListener("change", () => {
+          const newPos = parseInt(posSelect.value, 10) || 0;
+          setPositionForPlayer(p.index, newPos);
+        });
+
+        const netLabel = document.createElement("div");
+        const absNet = Math.abs(p.net || 0);
+        const netMoney = formatMoney(absNet);
+        if (p.net > 0) {
+          netLabel.textContent = "+" + netMoney;
+          netLabel.className = "net-profit";
+        } else if (p.net < 0) {
+          netLabel.textContent = "-" + netMoney;
+          netLabel.className = "net-loss";
+        } else {
+          netLabel.textContent = netMoney;
+          netLabel.className = "net-neutral";
+        }
+
+        resultDiv.appendChild(posSelect);
+        resultDiv.appendChild(netLabel);
+
+        row.appendChild(nameDiv);
+        row.appendChild(buyDiv);
+        row.appendChild(rebuyDiv);
+        row.appendChild(spentDiv);
+        row.appendChild(resultDiv);
+
+        playersContainer.appendChild(row);
+
+        // Eventos de buy-in/rebuy
+        buyMinus.addEventListener("click", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns - 1, state.players[p.index].rebuys);
+        });
+        buyPlus.addEventListener("click", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns + 1, state.players[p.index].rebuys);
+        });
+        rebuyMinus.addEventListener("click", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns, state.players[p.index].rebuys - 1);
+        });
+        rebuyPlus.addEventListener("click", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns, state.players[p.index].rebuys + 1);
+        });
+
+        buyInputEl.addEventListener("change", () => {
+          updatePlayer(p.index, buyInputEl.value, state.players[p.index].rebuys);
+        });
+        rebuyInputEl.addEventListener("change", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns, rebuyInputEl.value);
+        });
+      });
+    }
+
+    function buildSummary() {
+      const {
+        buyInValue,
+        rebuyValue,
+        totalBuyIns,
+        totalRebuys,
+        totalFromBuyIns,
+        totalFromRebuys,
+        totalPot,
+        prize1Amount,
+        prize2Amount,
+        prize3Amount,
+        p1,
+        p2,
+        p3,
+      } = computeTotalsAndPrizes();
+
+      const playersLines = [];
+
+      state.players.forEach((p, i) => {
+        const name = p.name?.trim() || `Jogador ${i + 1}`;
+        const buyIns = toNumber(p.buyIns);
+        const rebuys = toNumber(p.rebuys);
+        if (buyIns === 0 && rebuys === 0 && !p.name) return;
+
+        const spent = buyIns * buyInValue + rebuys * rebuyValue;
+
+        let prize = 0;
+        if (p.position === 1) prize = prize1Amount;
+        if (p.position === 2) prize = prize2Amount;
+        if (p.position === 3) prize = prize3Amount;
+
+        const net = prize - spent;
+        const absNet = Math.abs(net);
+        const netMoney = formatMoney(absNet);
+        const netLabel = net > 0 ? `+${netMoney}` : net < 0 ? `-${netMoney}` : netMoney;
+
+        const posLabel = p.position ? `${p.position}º` : "-";
+
+        playersLines.push(
+          `${name}: ${buyIns} buy-in(s), ${rebuys} rebuy(s), gastou ${formatMoney(spent)}, posição ${posLabel}, prêmio ${formatMoney(prize)}, resultado ${netLabel}`
+        );
+      });
+
+      const lines = [];
+
+      lines.push("🃏 Poker Tracker – resumo da rodada");
+      lines.push("");
+      lines.push(`Buy-in: ${formatMoney(buyInValue)} | Rebuy: ${formatMoney(rebuyValue)}`);
+      lines.push(`Total buy-ins: ${totalBuyIns}`);
+      lines.push(`Total rebuys: ${totalRebuys}`);
+      lines.push(`Arrecadado em buy-ins: ${formatMoney(totalFromBuyIns)}`);
+      lines.push(`Arrecadado em rebuys: ${formatMoney(totalFromRebuys)}`);
+      lines.push(`Pote total: ${formatMoney(totalPot)}`);
+      lines.push("");
+      lines.push("Prêmios:");
+      lines.push(`1º lugar (${p1}%): ${formatMoney(prize1Amount)}`);
+      lines.push(`2º lugar (${p2}%): ${formatMoney(prize2Amount)}`);
+      lines.push(`3º lugar (${p3}%): ${formatMoney(prize3Amount)}`);
+      lines.push("");
+
+      if (playersLines.length) {
+        lines.push("Jogadores:");
+        lines.push(...playersLines);
       }
-    } catch (e) {
-      console.error(e);
-      alert("Não foi possível copiar o resumo.");
+
+      return lines.join("\n");
     }
-  });
-}
 
+    function recalc() {
+      const {
+        totalBuyIns,
+        totalRebuys,
+        totalFromBuyIns,
+        totalFromRebuys,
+        totalPot,
+        prize1Amount,
+        prize2Amount,
+        prize3Amount,
+      } = computeTotalsAndPrizes();
 
-    
+      totalBuyInsEl.textContent = totalBuyIns;
+      totalRebuysEl.textContent = totalRebuys;
+      totalFromBuyInsEl.textContent = formatMoney(totalFromBuyIns);
+      totalFromRebuysEl.textContent = formatMoney(totalFromRebuys);
+      totalPotEl.textContent = formatMoney(totalPot);
+
+      prize1AmountEl.textContent = formatMoney(prize1Amount);
+      prize2AmountEl.textContent = formatMoney(prize2Amount);
+      prize3AmountEl.textContent = formatMoney(prize3Amount);
+
+      const summary = buildSummary();
+      if (summaryTextEl) {
+        summaryTextEl.value = summary;
+      }
+      if (whatsSummaryLink) {
+        whatsSummaryLink.href = "https://wa.me/?text=" + encodeURIComponent(summary);
+      }
+    }
+
     // Listeners settings
     buyInInput.addEventListener("change", () => {
       state.settings.buyInValue = toNumber(buyInInput.value, 0);
@@ -1028,6 +998,7 @@ function renderPlayers() {
       state.settings.prize3 = toNumber(prize3Input.value, 0);
       saveState(state);
       updatePrizeSumWarning();
+      renderPlayers();
       recalc();
     }
 
@@ -1045,6 +1016,27 @@ function renderPlayers() {
       renderPlayers();
       recalc();
     });
+
+    if (copySummaryBtn) {
+      copySummaryBtn.addEventListener("click", async () => {
+        const text = summaryTextEl?.value || "";
+        if (!text.trim()) return;
+
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+            alert("Resumo copiado para a área de transferência.");
+          } else {
+            summaryTextEl.select();
+            document.execCommand("copy");
+            alert("Resumo copiado (modo compatibilidade).");
+          }
+        } catch (e) {
+          console.error(e);
+          alert("Não foi possível copiar o resumo.");
+        }
+      });
+    }
 
     // Inicialização
     renderSettings();
