@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Poker Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- PWA manifest -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#ffffff" />
+
+  <!-- iOS specific -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Poker Tracker" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f3f3f5;
+      color: #111;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    header {
+      padding: 10px 14px;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    header h1 {
+      font-size: 20px;
+      margin: 0;
+    }
+
+    .theme-toggle {
+      border-radius: 999px;
+      border: 1px solid #d0d0d4;
+      background: #f2f2f7;
+      padding: 6px 10px;
+      font-size: 16px;
+      cursor: pointer;
+      min-width: 40px;
+    }
+
+    main {
+      padding: 16px;
+      flex: 1;
+      max-width: 900px;
+      width: 100%;
+      margin: 0 auto 8px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+      transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    label {
+      font-size: 13px;
+      display: block;
+      margin-bottom: 4px;
+      color: #555;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: 1px solid #d0d0d4;
+      font-size: 14px;
+      background: #ffffff;
+      color: inherit;
+    }
+
+    input[type="number"]:focus,
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #007aff;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .row > div {
+      flex: 1;
+      min-width: 90px;
+    }
+
+    .player-head {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr 1fr;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr 1fr;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 6px;
+      padding: 4px 4px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .player-row.biggest {
+      border-color: #ff9500;
+      background: rgba(255,149,0,0.08);
+    }
+
+    .player-row.smallest {
+      border-color: #34c759;
+      background: rgba(52,199,89,0.08);
+    }
+
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .counter button {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: none;
+      font-size: 18px;
+      font-weight: 600;
+      background: #f2f2f7;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .counter input {
+      width: 48px;
+      text-align: center;
+      padding: 4px;
+      border-radius: 6px;
+      border: 1px solid #d0d0d4;
+      font-size: 14px;
+      background: #ffffff;
+      color: inherit;
+    }
+
+    .spent-label {
+      font-size: 14px;
+      text-align: right;
+      padding-right: 4px;
+      min-width: 80px;
+    }
+
+    .summary-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .summary-item strong {
+      font-weight: 600;
+    }
+
+    .total-pot {
+      font-size: 18px;
+      font-weight: 700;
+      margin-top: 6px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: #007aff;
+      color: white;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .btn-danger {
+      background: #ff3b30;
+      color: white;
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .small-note {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .warning {
+      color: #c00;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    footer {
+      font-size: 11px;
+      text-align: center;
+      padding: 6px 12px 10px;
+      color: #666;
+    }
+
+    /* Dark mode */
+    body.dark {
+      background: #111111;
+      color: #f5f5f5;
+    }
+
+    body.dark header {
+      background: #1c1c1e;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.7);
+    }
+
+    body.dark .card {
+      background: #1c1c1e;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.7);
+      border: 1px solid #2c2c2e;
+    }
+
+    body.dark input[type="number"],
+    body.dark input[type="text"] {
+      background: #2c2c2e;
+      border-color: #3a3a3c;
+      color: #f5f5f5;
+    }
+
+    body.dark .counter button {
+      background: #2c2c2e;
+      color: #f5f5f5;
+    }
+
+    body.dark .btn-primary {
+      background: #0a84ff;
+    }
+
+    body.dark .btn-danger {
+      background: #ff453a;
+    }
+
+    body.dark .small-note {
+      color: #aaa;
+    }
+
+    body.dark footer {
+      color: #999;
+    }
+
+    body.dark .player-row.biggest {
+      background: rgba(255,159,10,0.25);
+      border-color: #ff9f0a;
+    }
+
+    body.dark .player-row.smallest {
+      background: rgba(48,209,88,0.3);
+      border-color: #30d158;
+    }
+
+    @media (max-width: 480px) {
+      .player-head,
+      .player-row {
+        grid-template-columns: 1.3fr 1fr 1fr 1.2fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Poker Tracker</h1>
+    <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">🌙</button>
+  </header>
+
+  <main>
+    <!-- Session settings -->
+    <section class="card">
+      <div class="card-title">Configurações da rodada</div>
+      <div class="row">
+        <div>
+          <label for="buyInValue">Valor do buy-in (R$)</label>
+          <input id="buyInValue" type="number" min="0" step="0.01" inputmode="decimal" />
+        </div>
+        <div>
+          <label for="rebuyValue">Valor do rebuy (R$)</label>
+          <input id="rebuyValue" type="number" min="0" step="0.01" inputmode="decimal" />
+        </div>
+      </div>
+
+      <div style="margin-top:8px;">
+        <div class="card-title" style="font-size:14px;margin-bottom:4px;">Distribuição de prêmios (%)</div>
+        <div class="row">
+          <div>
+            <label for="prize1">1º lugar</label>
+            <input id="prize1" type="number" min="0" max="100" step="1" />
+          </div>
+          <div>
+            <label for="prize2">2º lugar</label>
+            <input id="prize2" type="number" min="0" max="100" step="1" />
+          </div>
+          <div>
+            <label for="prize3">3º lugar</label>
+            <input id="prize3" type="number" min="0" max="100" step="1" />
+          </div>
+        </div>
+        <div id="prizeSumWarning" class="warning" style="display:none;"></div>
+        <div class="small-note">Dica: normalmente a soma dá 100%.</div>
+      </div>
+
+      <button id="resetSession" class="btn btn-danger">Zerar rodada</button>
+    </section>
+
+    <!-- Players -->
+    <section class="card">
+      <div class="card-title">Jogadores (até 10)</div>
+      <div class="player-head">
+        <div>Jogador</div>
+        <div>Buy-ins</div>
+        <div>Rebuys</div>
+        <div>Total gasto</div>
+      </div>
+      <div id="playersContainer"></div>
+      <div class="small-note">
+        Os jogadores são ordenados pelo total gasto (do maior para o menor).
+      </div>
+    </section>
+
+    <!-- Totals & prizes -->
+    <section class="card">
+      <div class="card-title">Totais & prêmios</div>
+      <div class="summary-item">
+        <span>Total de buy-ins</span><strong id="totalBuyIns">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Total de rebuys</span><strong id="totalRebuys">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Arrecadado em buy-ins</span><strong id="totalFromBuyIns">R$ 0,00</strong>
+      </div>
+      <div class="summary-item">
+        <span>Arrecadado em rebuys</span><strong id="totalFromRebuys">R$ 0,00</strong>
+      </div>
+      <div class="total-pot">
+        Pote total: <span id="totalPot">R$ 0,00</span>
+      </div>
+
+      <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
+
+      <div class="summary-item">
+        <span>1º lugar</span><strong id="prize1Amount">R$ 0,00</strong>
+      </div>
+      <div class="summary-item">
+        <span>2º lugar</span><strong id="prize2Amount">R$ 0,00</strong>
+      </div>
+      <div class="summary-item">
+        <span>3º lugar</span><strong id="prize3Amount">R$ 0,00</strong>
+      </div>
+
+      <button id="recalcBtn" class="btn btn-primary">Recalcular</button>
+      <div class="small-note">Tudo é recalculado automaticamente, mas você pode tocar em “Recalcular” a qualquer momento.</div>
+    </section>
+  </main>
+
+  <footer>
+    Dados ficam somente neste dispositivo · Funciona offline após o primeiro acesso
+  </footer>
+
+  <script>
+    const STORAGE_KEY = "poker_tracker_state_v2";
+    const THEME_KEY = "poker_tracker_theme";
+
+    // Formatação de moeda BRL
+    let moneyFormatter;
+    try {
+      moneyFormatter = new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        minimumFractionDigits: 2,
+      });
+    } catch (e) {
+      moneyFormatter = {
+        format(v) {
+          return "R$ " + Number(v).toFixed(2).replace(".", ",");
+        },
+      };
+    }
+
+    function formatMoney(v) {
+      return moneyFormatter.format(v || 0);
+    }
+
+    function defaultState() {
+      return {
+        settings: {
+          buyInValue: 100,
+          rebuyValue: 100,
+          prize1: 50,
+          prize2: 30,
+          prize3: 20,
+        },
+        players: Array.from({ length: 10 }, (_, i) => ({
+          id: i,
+          name: "",
+          buyIns: 0,
+          rebuys: 0,
+        })),
+      };
+    }
+
+    function loadState() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (!data) return defaultState();
+        const parsed = JSON.parse(data);
+        if (!parsed.players || parsed.players.length !== 10) {
+          parsed.players = defaultState().players;
+        }
+        return parsed;
+      } catch (e) {
+        console.error("Error loading state", e);
+        return defaultState();
+      }
+    }
+
+    function saveState(state) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {
+        console.error("Error saving state", e);
+      }
+    }
+
+    function toNumber(v, def = 0) {
+      if (v === null || v === undefined) return def;
+      const normalized = String(v).replace(",", ".");
+      const n = parseFloat(normalized);
+      return isNaN(n) ? def : n;
+    }
+
+    let state = loadState();
+
+    // Elements
+    const buyInInput = document.getElementById("buyInValue");
+    const rebuyInput = document.getElementById("rebuyValue");
+    const prize1Input = document.getElementById("prize1");
+    const prize2Input = document.getElementById("prize2");
+    const prize3Input = document.getElementById("prize3");
+    const prizeSumWarning = document.getElementById("prizeSumWarning");
+    const playersContainer = document.getElementById("playersContainer");
+
+    const totalBuyInsEl = document.getElementById("totalBuyIns");
+    const totalRebuysEl = document.getElementById("totalRebuys");
+    const totalFromBuyInsEl = document.getElementById("totalFromBuyIns");
+    const totalFromRebuysEl = document.getElementById("totalFromRebuys");
+    const totalPotEl = document.getElementById("totalPot");
+    const prize1AmountEl = document.getElementById("prize1Amount");
+    const prize2AmountEl = document.getElementById("prize2Amount");
+    const prize3AmountEl = document.getElementById("prize3Amount");
+
+    const themeToggleBtn = document.getElementById("themeToggle");
+
+    // THEME
+    function applyTheme(theme) {
+      if (theme === "dark") {
+        document.body.classList.add("dark");
+        themeToggleBtn.textContent = "☀️";
+      } else {
+        document.body.classList.remove("dark");
+        themeToggleBtn.textContent = "🌙";
+      }
+    }
+
+    function loadTheme() {
+      const stored = localStorage.getItem(THEME_KEY);
+      const theme = stored === "dark" ? "dark" : "light";
+      applyTheme(theme);
+    }
+
+    function toggleTheme() {
+      const isDark = document.body.classList.contains("dark");
+      const newTheme = isDark ? "light" : "dark";
+      applyTheme(newTheme);
+      localStorage.setItem(THEME_KEY, newTheme);
+    }
+
+    themeToggleBtn.addEventListener("click", toggleTheme);
+    loadTheme();
+
+    function renderSettings() {
+      buyInInput.value = state.settings.buyInValue;
+      rebuyInput.value = state.settings.rebuyValue;
+      prize1Input.value = state.settings.prize1;
+      prize2Input.value = state.settings.prize2;
+      prize3Input.value = state.settings.prize3;
+      updatePrizeSumWarning();
+    }
+
+    function updatePrizeSumWarning() {
+      const s = state.settings;
+      const sum =
+        toNumber(s.prize1) + toNumber(s.prize2) + toNumber(s.prize3);
+      if (sum !== 100) {
+        prizeSumWarning.style.display = "block";
+        prizeSumWarning.textContent =
+          "Atenção: a soma dos prêmios é " + sum + "% (não 100%).";
+      } else {
+        prizeSumWarning.style.display = "none";
+      }
+    }
+
+    function updatePlayer(originalIndex, newBuyIns, newRebuys) {
+      const player = state.players[originalIndex];
+      player.buyIns = Math.max(0, Math.floor(toNumber(newBuyIns, 0)));
+      player.rebuys = Math.max(0, Math.floor(toNumber(newRebuys, 0)));
+      saveState(state);
+      renderPlayers();
+      recalc();
+    }
+
+    function renderPlayers() {
+      playersContainer.innerHTML = "";
+
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+
+      const playersWithIndex = state.players.map((p, index) => {
+        const totalSpent = p.buyIns * buyInValue + p.rebuys * rebuyValue;
+        return { ...p, index, totalSpent };
+      });
+
+      const totals = playersWithIndex.map((p) => p.totalSpent);
+      const maxSpent = Math.max(...totals, 0);
+      const positiveTotals = totals.filter((v) => v > 0);
+      const minSpent =
+        positiveTotals.length > 0 ? Math.min(...positiveTotals) : 0;
+
+      // Ordena do que mais gastou para o que menos gastou
+      playersWithIndex.sort((a, b) => b.totalSpent - a.totalSpent);
+
+      playersWithIndex.forEach((p) => {
+        const row = document.createElement("div");
+        row.className = "player-row";
+
+        if (p.totalSpent > 0 && p.totalSpent === maxSpent) {
+          row.classList.add("biggest");
+        }
+        if (p.totalSpent > 0 && p.totalSpent === minSpent && maxSpent !== minSpent) {
+          row.classList.add("smallest");
+        }
+
+        // Nome
+        const nameDiv = document.createElement("div");
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.placeholder = "Jogador " + (p.index + 1);
+        nameInput.value = p.name || "";
+        nameInput.addEventListener("input", () => {
+          state.players[p.index].name = nameInput.value;
+          saveState(state);
+        });
+        nameDiv.appendChild(nameInput);
+
+        // Buy-ins
+        const buyDiv = document.createElement("div");
+        const buyCounter = document.createElement("div");
+        buyCounter.className = "counter";
+
+        const buyMinus = document.createElement("button");
+        buyMinus.textContent = "–";
+
+        const buyInputEl = document.createElement("input");
+        buyInputEl.type = "number";
+        buyInputEl.min = "0";
+        buyInputEl.step = "1";
+        buyInputEl.value = p.buyIns;
+
+        const buyPlus = document.createElement("button");
+        buyPlus.textContent = "+";
+
+        buyCounter.appendChild(buyMinus);
+        buyCounter.appendChild(buyInputEl);
+        buyCounter.appendChild(buyPlus);
+        buyDiv.appendChild(buyCounter);
+
+        // Rebuys
+        const rebuyDiv = document.createElement("div");
+        const rebuyCounter = document.createElement("div");
+        rebuyCounter.className = "counter";
+
+        const rebuyMinus = document.createElement("button");
+        rebuyMinus.textContent = "–";
+
+        const rebuyInputEl = document.createElement("input");
+        rebuyInputEl.type = "number";
+        rebuyInputEl.min = "0";
+        rebuyInputEl.step = "1";
+        rebuyInputEl.value = p.rebuys;
+
+        const rebuyPlus = document.createElement("button");
+        rebuyPlus.textContent = "+";
+
+        rebuyCounter.appendChild(rebuyMinus);
+        rebuyCounter.appendChild(rebuyInputEl);
+        rebuyCounter.appendChild(rebuyPlus);
+        rebuyDiv.appendChild(rebuyCounter);
+
+        // Total gasto
+        const spentDiv = document.createElement("div");
+        const spentLabel = document.createElement("div");
+        spentLabel.className = "spent-label";
+        spentLabel.textContent = formatMoney(p.totalSpent);
+        spentDiv.appendChild(spentLabel);
+
+        row.appendChild(nameDiv);
+        row.appendChild(buyDiv);
+        row.appendChild(rebuyDiv);
+        row.appendChild(spentDiv);
+        playersContainer.appendChild(row);
+
+        // Eventos
+        buyMinus.addEventListener("click", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns - 1, state.players[p.index].rebuys);
+        });
+        buyPlus.addEventListener("click", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns + 1, state.players[p.index].rebuys);
+        });
+        rebuyMinus.addEventListener("click", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns, state.players[p.index].rebuys - 1);
+        });
+        rebuyPlus.addEventListener("click", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns, state.players[p.index].rebuys + 1);
+        });
+
+        buyInputEl.addEventListener("change", () => {
+          updatePlayer(p.index, buyInputEl.value, state.players[p.index].rebuys);
+        });
+        rebuyInputEl.addEventListener("change", () => {
+          updatePlayer(p.index, state.players[p.index].buyIns, rebuyInputEl.value);
+        });
+      });
+    }
+
+    function recalc() {
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+
+      let totalBuyIns = 0;
+      let totalRebuys = 0;
+      state.players.forEach((p) => {
+        totalBuyIns += toNumber(p.buyIns);
+        totalRebuys += toNumber(p.rebuys);
+      });
+
+      const totalFromBuyIns = totalBuyIns * buyInValue;
+      const totalFromRebuys = totalRebuys * rebuyValue;
+      const totalPot = totalFromBuyIns + totalFromRebuys;
+
+      totalBuyInsEl.textContent = totalBuyIns;
+      totalRebuysEl.textContent = totalRebuys;
+      totalFromBuyInsEl.textContent = formatMoney(totalFromBuyIns);
+      totalFromRebuysEl.textContent = formatMoney(totalFromRebuys);
+      totalPotEl.textContent = formatMoney(totalPot);
+
+      const p1 = toNumber(state.settings.prize1);
+      const p2 = toNumber(state.settings.prize2);
+      const p3 = toNumber(state.settings.prize3);
+
+      let prize1Amount = (totalPot * p1) / 100;
+      let prize2Amount = (totalPot * p2) / 100;
+      let prize3Amount = (totalPot * p3) / 100;
+
+      const totalPrizes = prize1Amount + prize2Amount + prize3Amount;
+      const diff = totalPot - totalPrizes;
+      prize1Amount += diff; // Ajuste de centavos
+
+      prize1AmountEl.textContent = formatMoney(prize1Amount);
+      prize2AmountEl.textContent = formatMoney(prize2Amount);
+      prize3AmountEl.textContent = formatMoney(prize3Amount);
+    }
+
+    // Listeners settings
+    buyInInput.addEventListener("change", () => {
+      state.settings.buyInValue = toNumber(buyInInput.value, 0);
+      saveState(state);
+      renderPlayers();
+      recalc();
+    });
+
+    rebuyInput.addEventListener("change", () => {
+      state.settings.rebuyValue = toNumber(rebuyInput.value, 0);
+      saveState(state);
+      renderPlayers();
+      recalc();
+    });
+
+    function updatePrizeSetting() {
+      state.settings.prize1 = toNumber(prize1Input.value, 0);
+      state.settings.prize2 = toNumber(prize2Input.value, 0);
+      state.settings.prize3 = toNumber(prize3Input.value, 0);
+      saveState(state);
+      updatePrizeSumWarning();
+      recalc();
+    }
+
+    prize1Input.addEventListener("change", updatePrizeSetting);
+    prize2Input.addEventListener("change", updatePrizeSetting);
+    prize3Input.addEventListener("change", updatePrizeSetting);
+
+    document.getElementById("recalcBtn").addEventListener("click", recalc);
+
+    document.getElementById("resetSession").addEventListener("click", () => {
+      if (!confirm("Zerar todos os jogadores e configurações?")) return;
+      state = defaultState();
+      saveState(state);
+      renderSettings();
+      renderPlayers();
+      recalc();
+    });
+
+    // Inicialização
+    renderSettings();
+    renderPlayers();
+    recalc();
+
+    // PWA service worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker
+          .register("sw.js")
+          .catch((err) => console.error("SW registration failed", err));
+      });
+    }
+  </script>
+</body>
+</html>
