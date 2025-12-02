@@ -395,12 +395,35 @@
       <div class="summary-item">
         <span>2º lugar</span><strong id="prize2Amount">R$ 0,00</strong>
       </div>
-      <div class="summary-item">
-        <span>3º lugar</span><strong id="prize3Amount">R$ 0,00</strong>
-      </div>
+     <div class="summary-item">
+  <span>3º lugar</span><strong id="prize3Amount">R$ 0,00</strong>
+</div>
 
-      <button id="recalcBtn" class="btn btn-primary">Recalcular</button>
-      <div class="small-note">Tudo é recalculado automaticamente, mas você pode tocar em “Recalcular” a qualquer momento.</div>
+<hr style="margin:12px 0;border:none;border-top:1px dashed #ddd;">
+
+<div class="card-title" style="font-size:14px;margin-bottom:4px;">
+  Resumo da rodada
+</div>
+
+<textarea id="summaryText" readonly
+  style="width:100%;min-height:90px;border-radius:8px;border:1px solid #d0d0d4;
+         padding:6px 8px;font-size:13px;resize:vertical;">
+</textarea>
+
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+  <button id="copySummary" class="btn"
+    style="flex:1;min-width:120px;background:#34c759;color:white;">
+    Copiar resumo
+  </button>
+  <a id="whatsSummary" class="btn"
+    style="flex:1;min-width:120px;text-align:center;text-decoration:none;background:#25d366;color:white;">
+    WhatsApp
+  </a>
+</div>
+
+<button id="recalcBtn" class="btn btn-primary">Recalcular</button>
+<div class="small-note">Tudo é recalculado automaticamente, mas você pode tocar em “Recalcular” a qualquer momento.</div>
+
     </section>
   </main>
 
@@ -450,6 +473,69 @@
       };
     }
 
+function buildSummary() {
+  const buyInValue = toNumber(state.settings.buyInValue);
+  const rebuyValue = toNumber(state.settings.rebuyValue);
+
+  let totalBuyIns = 0;
+  let totalRebuys = 0;
+
+  const playersLines = [];
+
+  state.players.forEach((p, i) => {
+    const name = p.name?.trim() || `Jogador ${i + 1}`;
+    const buyIns = toNumber(p.buyIns);
+    const rebuys = toNumber(p.rebuys);
+    if (buyIns === 0 && rebuys === 0 && !p.name) return; // ignora linha vazia
+
+    const spent = buyIns * buyInValue + rebuys * rebuyValue;
+    totalBuyIns += buyIns;
+    totalRebuys += rebuys;
+
+    playersLines.push(
+      `${name}: ${buyIns} buy-in(s), ${rebuys} rebuy(s) – gasto ${formatMoney(spent)}`
+    );
+  });
+
+  const totalFromBuyIns = totalBuyIns * buyInValue;
+  const totalFromRebuys = totalRebuys * rebuyValue;
+  const totalPot = totalFromBuyIns + totalFromRebuys;
+
+  const p1 = toNumber(state.settings.prize1);
+  const p2 = toNumber(state.settings.prize2);
+  const p3 = toNumber(state.settings.prize3);
+
+  let prize1Amount = (totalPot * p1) / 100;
+  let prize2Amount = (totalPot * p2) / 100;
+  let prize3Amount = (totalPot * p3) / 100;
+  const totalPrizes = prize1Amount + prize2Amount + prize3Amount;
+  const diff = totalPot - totalPrizes;
+  prize1Amount += diff; // ajuste centavos
+
+  const lines = [];
+
+  lines.push("🃏 Poker Tracker – resumo da rodada");
+  lines.push("");
+  lines.push(`Buy-in: ${formatMoney(buyInValue)} | Rebuy: ${formatMoney(rebuyValue)}`);
+  lines.push(`Total buy-ins: ${totalBuyIns}`);
+  lines.push(`Total rebuys: ${totalRebuys}`);
+  lines.push(`Pote total: ${formatMoney(totalPot)}`);
+  lines.push("");
+  lines.push("Prêmios:");
+  lines.push(`1º lugar (${p1}%): ${formatMoney(prize1Amount)}`);
+  lines.push(`2º lugar (${p2}%): ${formatMoney(prize2Amount)}`);
+  lines.push(`3º lugar (${p3}%): ${formatMoney(prize3Amount)}`);
+  lines.push("");
+  if (playersLines.length) {
+    lines.push("Jogadores:");
+    lines.push(...playersLines);
+  }
+
+  return lines.join("\n");
+}
+
+
+    
     function loadState() {
       try {
         const data = localStorage.getItem(STORAGE_KEY);
@@ -501,6 +587,10 @@
     const prize3AmountEl = document.getElementById("prize3Amount");
 
     const themeToggleBtn = document.getElementById("themeToggle");
+    const summaryTextEl = document.getElementById("summaryText");
+    const copySummaryBtn = document.getElementById("copySummary");
+    const whatsSummaryLink = document.getElementById("whatsSummary");
+
 
     // THEME
     function applyTheme(theme) {
@@ -719,8 +809,39 @@
       prize1AmountEl.textContent = formatMoney(prize1Amount);
       prize2AmountEl.textContent = formatMoney(prize2Amount);
       prize3AmountEl.textContent = formatMoney(prize3Amount);
-    }
+      // — daqui pra baixo é o novo trecho — 
+      const summary = buildSummary();
+      if (summaryTextEl) {
+        summaryTextEl.value = summary;
+      }
+      if (whatsSummaryLink) {
+        whatsSummaryLink.href = "https://wa.me/?text=" + encodeURIComponent(summary);
+      }
+   }
+if (copySummaryBtn) {
+  copySummaryBtn.addEventListener("click", async () => {
+    const text = summaryTextEl?.value || "";
+    if (!text) return;
 
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        alert("Resumo copiado para a área de transferência.");
+      } else {
+        // fallback pra navegadores mais antigos
+        summaryTextEl.select();
+        document.execCommand("copy");
+        alert("Resumo copiado (modo compatibilidade).");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Não foi possível copiar o resumo.");
+    }
+  });
+}
+
+
+    
     // Listeners settings
     buyInInput.addEventListener("change", () => {
       state.settings.buyInValue = toNumber(buyInInput.value, 0);
