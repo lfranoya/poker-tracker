@@ -392,38 +392,26 @@
 
     <!-- Totals & prizes -->
     <section class="card">
-      <div class="card-title">Valores:</div>
+      <div class="card-title">Totais & prêmios</div>
       <div class="summary-item">
         <span>Total de buy-ins</span><strong id="totalBuyIns">0</strong>
       </div>
       <div class="summary-item">
         <span>Total de rebuys</span><strong id="totalRebuys">0</strong>
       </div>
+      <div class="summary-item">
+        <span>Arrecadado em buy-ins</span><strong id="totalFromBuyIns">R$ 0,00</strong>
+      </div>
+      <div class="summary-item">
+        <span>Arrecadado em rebuys</span><strong id="totalFromRebuys">R$ 0,00</strong>
+      </div>
       <div class="total-pot">
         Pote total: <span id="totalPot">R$ 0,00</span>
       </div>
+
       <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
 
       <div id="rankingUI" style="font-size:14px; line-height:1.45;"></div>
-
-
-      
-      <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
-
-      <!-- Removemos a exibição detalhada de prêmios 1º/2º/3º no UI? Não, mantemos só se você quiser.
-           Pelo pedido, a remoção é para o RESUMO, não para a UI.
-           Se quiser tirar daqui também, é só apagar este bloco:
-
-      <div class="summary-item">
-        <span>1º lugar</span><strong id="prize1Amount">R$ 0,00</strong>
-      </div>
-      <div class="summary-item">
-        <span>2º lugar</span><strong id="prize2Amount">R$ 0,00</strong>
-      </div>
-      <div class="summary-item">
-        <span>3º lugar</span><strong id="prize3Amount">R$ 0,00</strong>
-      </div>
-      -->
 
       <div class="card-title" style="font-size:14px;margin:12px 0 4px;">
         Resumo da rodada
@@ -460,7 +448,7 @@
   </footer>
 
   <script>
-    const STORAGE_KEY = "poker_tracker_state_v4";
+    const STORAGE_KEY = "poker_tracker_state_v5";
     const THEME_KEY = "poker_tracker_theme";
 
     // Formatação de moeda BRL
@@ -581,6 +569,7 @@
     const copySummaryBtn = document.getElementById("copySummary");
     const whatsSummaryLink = document.getElementById("whatsSummary");
     const exportImageBtn = document.getElementById("exportImageBtn");
+    const rankingUIEl = document.getElementById("rankingUI");
 
     const themeToggleBtn = document.getElementById("themeToggle");
 
@@ -611,14 +600,14 @@
     themeToggleBtn.addEventListener("click", toggleTheme);
     loadTheme();
 
-    // Atualiza o cabeçalho com a data do dia
-(function updateHeaderTitleWithDate() {
-  const titleEl = document.getElementById("pageTitle");
-  if (!titleEl) return;
-  const today = new Date();
-  const dateStr = formatDateBR(today);
-  titleEl.textContent = "Poker - " + dateStr;
-})();
+    // Cabeçalho com data
+    (function updateHeaderTitleWithDate() {
+      const titleEl = document.getElementById("pageTitle");
+      if (!titleEl) return;
+      const today = new Date();
+      const dateStr = formatDateBR(today);
+      titleEl.textContent = "Poker - " + dateStr;
+    })();
 
     function renderSettings() {
       buyInInput.value = state.settings.buyInValue;
@@ -681,9 +670,6 @@
         prize1Amount,
         prize2Amount,
         prize3Amount,
-        p1,
-        p2,
-        p3,
       };
     }
 
@@ -1008,7 +994,7 @@ Ranking: ${rankingShort}`;
       const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
       if (rankingLines.length) {
         lines.push("Ranking final:");
-        lines.push(...rankingLines);
+        rankingLines.forEach(line => lines.push(line));
         lines.push("");
       }
 
@@ -1039,21 +1025,6 @@ Ranking: ${rankingShort}`;
       totalPotEl.textContent = formatMoney(totalPot);
 
       const fullSummary = buildSummary();
-
-      // Atualiza ranking visual na seção Totais & Prêmios
-      const rankingUI = document.getElementById("rankingUI");
-      const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
-
-      if (rankingLines.length) {
-        rankingUI.innerHTML = `
-          <strong>Ranking final:</strong><br>
-          ${rankingLines.join("<br>")}
-        `;
-      } else {
-        rankingUI.innerHTML = "";
-      }
-
-      
       const shortSummary = buildShortSummary(prize1Amount, prize2Amount, prize3Amount);
 
       if (summaryTextEl) {
@@ -1062,6 +1033,17 @@ Ranking: ${rankingShort}`;
       if (whatsSummaryLink) {
         // WhatsApp recebe apenas o resumo curto (pote total + ranking, sem ganhos/perdas)
         whatsSummaryLink.href = "https://wa.me/?text=" + encodeURIComponent(shortSummary);
+      }
+
+      if (rankingUIEl) {
+        const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
+        if (rankingLines.length) {
+          rankingUIEl.innerHTML =
+            `<strong>Ranking final:</strong><br>` +
+            rankingLines.join("<br>");
+        } else {
+          rankingUIEl.innerHTML = "";
+        }
       }
     }
 
