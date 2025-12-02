@@ -585,14 +585,12 @@
 
   const lines = [];
 
-  lines.push("🃏 Poker Tracker – resumo da rodada");
-  lines.push("");
-  lines.push(`Buy-in: ${formatMoney(buyInValue)} | Rebuy: ${formatMoney(rebuyValue)}`);
   lines.push(`Total buy-ins: ${totalBuyIns}`);
   lines.push(`Total rebuys: ${totalRebuys}`);
-  lines.push(`Arrecadado em buy-ins: ${formatMoney(totalFromBuyIns)}`);
-  lines.push(`Arrecadado em rebuys: ${formatMoney(totalFromRebuys)}`);
-  lines.push(`Pote total: ${formatMoney(totalPot)}`);
+  .push(`Buy-in: ${formatMoney(buyInValue)} | Rebuy: ${formatMoney(rebuyValue)}`);
+  lines.push(`R$ Buy-ins: ${formatMoney(totalFromBuyIns)}`);
+  lines.push(`R$ rebuys: ${formatMoney(totalFromRebuys)}`);
+  lines.push(`POTE TOTAL: ${formatMoney(totalPot)}`);
   lines.push("");
   lines.push("Prêmios:");
   lines.push(`1º lugar (${p1}%): ${formatMoney(prize1Amount)}`);
