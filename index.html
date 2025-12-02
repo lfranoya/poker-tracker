@@ -289,7 +289,7 @@
       color: #666;
     }
 
-    /* pay/receber */
+    /* Resultado (+ / -) */
     .pay-receive {
       font-weight: 600;
     }
@@ -488,21 +488,22 @@
         Pote total: <span id="totalPot">R$ 0,00</span>
       </div>
 
-      <hr style="margin:12px 0 8px;border:none;border-top:1px solid #eee;">
-
-      <!-- Tabela de prêmios com nomes + paga/receber -->
+      <!-- PRÊMIOS (somente valores, sem nomes/ícones/resultado) -->
+      <div class="card-subtitle" style="margin-top:12px;">PRÊMIOS</div>
       <div class="summary-item">
-        <span id="prize1Label">🥇 1º lugar: —</span>
+        <span>1º lugar</span>
         <strong id="prize1Amount">R$ 0,00</strong>
       </div>
       <div class="summary-item">
-        <span id="prize2Label">🥈 2º lugar: —</span>
+        <span>2º lugar</span>
         <strong id="prize2Amount">R$ 0,00</strong>
       </div>
       <div class="summary-item">
-        <span id="prize3Label">🥉 3º lugar: —</span>
+        <span>3º lugar</span>
         <strong id="prize3Amount">R$ 0,00</strong>
       </div>
+
+      <hr style="margin:12px 0 8px;border:none;border-top:2px solid #555;">
 
       <!-- COLOCAÇÕES e RESULTADOS DETALHADOS antes dos botões -->
       <div class="card-subtitle">COLOCAÇÕES</div>
@@ -647,10 +648,6 @@
     const prize2AmountEl = document.getElementById("prize2Amount");
     const prize3AmountEl = document.getElementById("prize3Amount");
 
-    const prize1LabelEl = document.getElementById("prize1Label");
-    const prize2LabelEl = document.getElementById("prize2Label");
-    const prize3LabelEl = document.getElementById("prize3Label");
-
     const rankingListEl = document.getElementById("rankingList");
     const playersSummaryListEl = document.getElementById("playersSummaryList");
 
@@ -729,44 +726,6 @@
       });
     }
 
-    function updatePrizeWinners(playersWithTotalsSorted) {
-      const byPlacement = (place) =>
-        playersWithTotalsSorted.find(p => p.placement === String(place) && p.buyIns > 0);
-
-      const p1 = byPlacement(1);
-      const p2 = byPlacement(2);
-      const p3 = byPlacement(3);
-
-      // rótulos com ícones + nome
-      prize1LabelEl.textContent = "🥇 1º lugar: " + (p1 ? (p1.name || ("Jogador " + (p1.index + 1))) : "—");
-      prize2LabelEl.textContent = "🥈 2º lugar: " + (p2 ? (p2.name || ("Jogador " + (p2.index + 1))) : "—");
-      prize3LabelEl.textContent = "🥉 3º lugar: " + (p3 ? (p3.name || ("Jogador " + (p3.index + 1))) : "—");
-
-      // paga/receber nas linhas de prêmio
-      function buildPrizeAmountEl(player, prizeAmount, element) {
-        if (!player || prizeAmount <= 0) {
-          element.textContent = formatMoney(prizeAmount || 0);
-          return;
-        }
-        const pagaRecebe = prizeAmount - player.totalSpent;
-        if (pagaRecebe > 0) {
-          element.innerHTML =
-            `${formatMoney(prizeAmount)} ` +
-            `<span class="pay-receive pay-receive--positive">(receber ${formatMoney(Math.abs(pagaRecebe))})</span>`;
-        } else if (pagaRecebe < 0) {
-          element.innerHTML =
-            `${formatMoney(prizeAmount)} ` +
-            `<span class="pay-receive pay-receive--negative">(pagar ${formatMoney(Math.abs(pagaRecebe))})</span>`;
-        } else {
-          element.innerHTML = `${formatMoney(prizeAmount)} <span class="pay-receive">(R$ 0,00)</span>`;
-        }
-      }
-
-      buildPrizeAmountEl(p1, prizeCache.p1, prize1AmountEl);
-      buildPrizeAmountEl(p2, prizeCache.p2, prize2AmountEl);
-      buildPrizeAmountEl(p3, prizeCache.p3, prize3AmountEl);
-    }
-
     function renderRankingAndSummary(playersWithTotalsSorted) {
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
@@ -810,16 +769,16 @@
             p.placement === "1" ? prizeCache.p1 :
             p.placement === "2" ? prizeCache.p2 :
             p.placement === "3" ? prizeCache.p3 : 0;
-          const pagaRecebe = placePrize - p.totalSpent;
+          const resultado = placePrize - p.totalSpent;
 
-          if (pagaRecebe > 0) {
+          if (resultado > 0) {
             right.innerHTML =
               `Prêmio: ${formatMoney(placePrize)} | ` +
-              `<span class="pay-receive pay-receive--positive">receber ${formatMoney(Math.abs(pagaRecebe))}</span>`;
-          } else if (pagaRecebe < 0) {
+              `<span class="pay-receive pay-receive--positive">+ ${formatMoney(Math.abs(resultado))}</span>`;
+          } else if (resultado < 0) {
             right.innerHTML =
               `Prêmio: ${formatMoney(placePrize)} | ` +
-              `<span class="pay-receive pay-receive--negative">pagar ${formatMoney(Math.abs(pagaRecebe))}</span>`;
+              `<span class="pay-receive pay-receive--negative">- ${formatMoney(Math.abs(resultado))}</span>`;
           } else {
             right.innerHTML =
               `Prêmio: ${formatMoney(placePrize)} | ` +
@@ -851,15 +810,15 @@
             p.placement === "1" ? prizeCache.p1 :
             p.placement === "2" ? prizeCache.p2 :
             p.placement === "3" ? prizeCache.p3 : 0;
-          const pagaRecebe = placePrize - p.totalSpent;
+          const resultado = placePrize - p.totalSpent;
 
-          let pagaRecebeHTML = "";
-          if (pagaRecebe > 0) {
-            pagaRecebeHTML = `<span class="pay-receive pay-receive--positive">receber ${formatMoney(Math.abs(pagaRecebe))}</span>`;
-          } else if (pagaRecebe < 0) {
-            pagaRecebeHTML = `<span class="pay-receive pay-receive--negative">pagar ${formatMoney(Math.abs(pagaRecebe))}</span>`;
+          let resultadoHTML = "";
+          if (resultado > 0) {
+            resultadoHTML = `<span class="pay-receive pay-receive--positive">+ ${formatMoney(Math.abs(resultado))}</span>`;
+          } else if (resultado < 0) {
+            resultadoHTML = `<span class="pay-receive pay-receive--negative">- ${formatMoney(Math.abs(resultado))}</span>`;
           } else {
-            pagaRecebeHTML = `<span class="pay-receive">${formatMoney(0)}</span>`;
+            resultadoHTML = `<span class="pay-receive">${formatMoney(0)}</span>`;
           }
 
           const name = p.name || ("Jogador " + (p.index + 1));
@@ -868,13 +827,11 @@
             `| RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) ` +
             `| GASTO: ${formatMoney(p.totalSpent)} ` +
             `| PRÊMIO: ${formatMoney(placePrize)} ` +
-            `| Paga/recebe: ${pagaRecebeHTML}`;
+            `| Resultado: ${resultadoHTML}`;
 
           playersSummaryListEl.appendChild(div);
         });
       }
-
-      updatePrizeWinners(playersWithTotalsSorted);
     }
 
     function renderPlayers() {
@@ -1082,13 +1039,18 @@
       const diff = totalPot - totalPrizes;
       prize1Amount += diff; // ajustes de centavos
 
+      // Escreve valores simples na tabela PRÊMIOS
+      prize1AmountEl.textContent = formatMoney(prize1Amount);
+      prize2AmountEl.textContent = formatMoney(prize2Amount);
+      prize3AmountEl.textContent = formatMoney(prize3Amount);
+
       // Atualiza cache
       prizeCache.totalPot = totalPot;
       prizeCache.p1 = prize1Amount;
       prizeCache.p2 = prize2Amount;
       prizeCache.p3 = prize3Amount;
 
-      // Atualiza colocações e nomes de ganhadores (inclui linhas superiores)
+      // Atualiza colocações e resultados detalhados
       renderRankingAndSummary(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
     }
 
@@ -1121,9 +1083,9 @@
 
       let lines = [];
       if (today) {
-        lines.push("Resumo da rodada de poker - " + today);
+        lines.push("Resultados Poker - " + today);
       } else {
-        lines.push("Resumo da rodada de poker");
+        lines.push("Resultados Poker");
       }
       lines.push(`Pote total: ${formatMoney(totalPot)}`);
       lines.push(
@@ -1147,22 +1109,22 @@
             place === "1" ? prizeCache.p1 :
             place === "2" ? prizeCache.p2 :
             place === "3" ? prizeCache.p3 : 0;
-          const pagaRecebe = placePrize - p.totalSpent;
+          const resultado = placePrize - p.totalSpent;
 
-          if (pagaRecebe > 0) {
+          if (resultado > 0) {
             lines.push(
               `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
-              `Paga/recebe: receber ${formatMoney(Math.abs(pagaRecebe))}`
+              `Resultado: + ${formatMoney(Math.abs(resultado))}`
             );
-          } else if (pagaRecebe < 0) {
+          } else if (resultado < 0) {
             lines.push(
               `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
-              `Paga/recebe: pagar ${formatMoney(Math.abs(pagaRecebe))}`
+              `Resultado: - ${formatMoney(Math.abs(resultado))}`
             );
           } else {
             lines.push(
               `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
-              `Paga/recebe: ${formatMoney(0)}`
+              `Resultado: ${formatMoney(0)}`
             );
           }
         });
@@ -1184,15 +1146,15 @@
             p.placement === "1" ? prizeCache.p1 :
             p.placement === "2" ? prizeCache.p2 :
             p.placement === "3" ? prizeCache.p3 : 0;
-          const pagaRecebe = placePrize - p.totalSpent;
+          const resultado = placePrize - p.totalSpent;
 
-          let pagaRecebeText = "";
-          if (pagaRecebe > 0) {
-            pagaRecebeText = `receber ${formatMoney(Math.abs(pagaRecebe))}`;
-          } else if (pagaRecebe < 0) {
-            pagaRecebeText = `pagar ${formatMoney(Math.abs(pagaRecebe))}`;
+          let resultadoText = "";
+          if (resultado > 0) {
+            resultadoText = `+ ${formatMoney(Math.abs(resultado))}`;
+          } else if (resultado < 0) {
+            resultadoText = `- ${formatMoney(Math.abs(resultado))}`;
           } else {
-            pagaRecebeText = formatMoney(0);
+            resultadoText = formatMoney(0);
           }
 
           lines.push(
@@ -1200,7 +1162,7 @@
             `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
             `GASTO: ${formatMoney(p.totalSpent)} | ` +
             `PRÊMIO: ${formatMoney(placePrize)} | ` +
-            `Paga/recebe: ${pagaRecebeText}`
+            `Resultado: ${resultadoText}`
           );
         });
       }
@@ -1230,17 +1192,16 @@
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, width, height);
 
+      const today = getTodayString();
+      let title = "Resultados Poker";
+      if (today) title += " - " + today;
+
       ctx.fillStyle = "#111111";
       ctx.font = "28px -apple-system, system-ui, sans-serif";
-      ctx.fillText("Resumo da rodada de poker", 40, 60);
+      ctx.fillText(title, 40, 60);
 
-      const today = getTodayString();
       let y = 100;
       ctx.font = "18px -apple-system, system-ui, sans-serif";
-      if (today) {
-        ctx.fillText(today, 40, y);
-        y += 30;
-      }
 
       let totalBuyIns = 0;
       let totalRebuys = 0;
@@ -1292,29 +1253,36 @@
             place === "1" ? prizeCache.p1 :
             place === "2" ? prizeCache.p2 :
             place === "3" ? prizeCache.p3 : 0;
-          const pagaRecebe = placePrize - p.totalSpent;
+          const resultado = placePrize - p.totalSpent;
 
-          let pagaRecebeText = "";
-          if (pagaRecebe > 0) {
-            pagaRecebeText = `receber ${formatMoney(Math.abs(pagaRecebe))}`;
-          } else if (pagaRecebe < 0) {
-            pagaRecebeText = `pagar ${formatMoney(Math.abs(pagaRecebe))}`;
+          const baseText =
+            `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | Resultado: `;
+          ctx.fillStyle = "#111111";
+          ctx.fillText(baseText, 40, y);
+
+          let resultText;
+          let resultColor = "#111111";
+          if (resultado > 0) {
+            resultText = `+ ${formatMoney(Math.abs(resultado))}`;
+            resultColor = "#34c759";
+          } else if (resultado < 0) {
+            resultText = `- ${formatMoney(Math.abs(resultado))}`;
+            resultColor = "#ff3b30";
           } else {
-            pagaRecebeText = formatMoney(0);
+            resultText = `${formatMoney(0)}`;
           }
 
-          const line =
-            `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
-            `Paga/recebe: ${pagaRecebeText}`;
-          if (y < height - 20) {
-            ctx.fillText(line, 40, y);
-            y += 24;
-          }
+          const baseWidth = ctx.measureText(baseText).width;
+          ctx.fillStyle = resultColor;
+          ctx.fillText(resultText, 40 + baseWidth, y);
+
+          y += 24;
         });
       }
 
       y += 20;
       ctx.font = "18px -apple-system, system-ui, sans-serif";
+      ctx.fillStyle = "#111111";
       ctx.fillText("Resultados detalhados:", 40, y);
       y += 30;
       ctx.font = "16px -apple-system, system-ui, sans-serif";
@@ -1330,27 +1298,34 @@
             p.placement === "1" ? prizeCache.p1 :
             p.placement === "2" ? prizeCache.p2 :
             p.placement === "3" ? prizeCache.p3 : 0;
-          const pagaRecebe = placePrize - p.totalSpent;
+          const resultado = placePrize - p.totalSpent;
 
-          let pagaRecebeText = "";
-          if (pagaRecebe > 0) {
-            pagaRecebeText = `receber ${formatMoney(Math.abs(pagaRecebe))}`;
-          } else if (pagaRecebe < 0) {
-            pagaRecebeText = `pagar ${formatMoney(Math.abs(pagaRecebe))}`;
-          } else {
-            pagaRecebeText = formatMoney(0);
-          }
-
-          const line =
+          const baseText =
             `${name} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
             `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
             `GASTO: ${formatMoney(p.totalSpent)} | ` +
-            `PRÊMIO: ${formatMoney(placePrize)} | ` +
-            `Paga/recebe: ${pagaRecebeText}`;
-          if (y < height - 20) {
-            ctx.fillText(line, 40, y);
-            y += 22;
+            `PRÊMIO: ${formatMoney(placePrize)} | Resultado: `;
+          ctx.fillStyle = "#111111";
+          if (y >= height - 20) return;
+          ctx.fillText(baseText, 40, y);
+
+          let resultText;
+          let resultColor = "#111111";
+          if (resultado > 0) {
+            resultText = `+ ${formatMoney(Math.abs(resultado))}`;
+            resultColor = "#34c759";
+          } else if (resultado < 0) {
+            resultText = `- ${formatMoney(Math.abs(resultado))}`;
+            resultColor = "#ff3b30";
+          } else {
+            resultText = `${formatMoney(0)}`;
           }
+
+          const baseWidth = ctx.measureText(baseText).width;
+          ctx.fillStyle = resultColor;
+          ctx.fillText(resultText, 40 + baseWidth, y);
+
+          y += 22;
         });
       }
     }
