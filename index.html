@@ -121,7 +121,7 @@
 
     .player-head {
       display: grid;
-      grid-template-columns: 1.3fr 0.9fr 0.9fr 1fr 1.1fr;
+      grid-template-columns: 1.3fr 1fr 1fr 1fr;
       gap: 6px;
       font-size: 11px;
       font-weight: 600;
@@ -130,7 +130,7 @@
 
     .player-row {
       display: grid;
-      grid-template-columns: 1.3fr 0.9fr 0.9fr 1fr 1.1fr;
+      grid-template-columns: 1.3fr 1fr 1fr 1fr;
       gap: 6px;
       align-items: center;
       margin-bottom: 6px;
@@ -246,27 +246,6 @@
       color: #666;
     }
 
-    .net-profit {
-      color: #34c759;
-      font-weight: 600;
-      font-size: 13px;
-      text-align: right;
-    }
-
-    .net-loss {
-      color: #ff3b30;
-      font-weight: 600;
-      font-size: 13px;
-      text-align: right;
-    }
-
-    .net-neutral {
-      color: #888888;
-      font-weight: 500;
-      font-size: 13px;
-      text-align: right;
-    }
-
     /* Dark mode */
     body.dark {
       background: #111111;
@@ -325,19 +304,19 @@
     @media (max-width: 480px) {
       .player-head,
       .player-row {
-        grid-template-columns: 1.2fr 0.8fr 0.8fr 1fr 1.1fr;
+        grid-template-columns: 1.3fr 1fr 1fr 1.2fr;
       }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1 id="pageTitle">Poker</h1>
+    <h1>Poker Tracker</h1>
     <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">🌙</button>
   </header>
 
   <main>
-    <!-- Session settings -->
+    <!-- Configurações -->
     <section class="card">
       <div class="card-title">Configurações da rodada</div>
       <div class="row">
@@ -374,15 +353,14 @@
       <button id="resetSession" class="btn btn-danger">Zerar rodada</button>
     </section>
 
-    <!-- Players -->
+    <!-- Jogadores -->
     <section class="card">
-      <div class="card-title">Jogadores</div>
+      <div class="card-title">Jogadores (até 10)</div>
       <div class="player-head">
         <div>Jogador</div>
-        <div><center>Buy-ins</center></div>
+        <div>Buy-ins</div>
         <div>Rebuys</div>
         <div>Total gasto</div>
-        <div>Pos/Res</div>
       </div>
       <div id="playersContainer"></div>
       <div class="small-note">
@@ -390,50 +368,39 @@
       </div>
     </section>
 
-    <!-- Totals & prizes -->
+    <!-- Totais & prêmios -->
     <section class="card">
-      <div class="card-title">RESULTADOS</div>
+      <div class="card-title">Totais & prêmios</div>
       <div class="summary-item">
         <span>Total de buy-ins</span><strong id="totalBuyIns">0</strong>
       </div>
       <div class="summary-item">
         <span>Total de rebuys</span><strong id="totalRebuys">0</strong>
       </div>
+      <div class="summary-item">
+        <span>Arrecadado em buy-ins</span><strong id="totalFromBuyIns">R$ 0,00</strong>
+      </div>
+      <div class="summary-item">
+        <span>Arrecadado em rebuys</span><strong id="totalFromRebuys">R$ 0,00</strong>
+      </div>
       <div class="total-pot">
-        POTE TOAL: <span id="totalPot">R$ 0,00</span>
+        Pote total: <span id="totalPot">R$ 0,00</span>
       </div>
 
       <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
 
-      <div id="rankingUI" style="font-size:14px; line-height:1.45;"></div>
-
-      <div class="card-title" style="font-size:14px;margin:12px 0 4px;">
-        Resumo da rodada
+      <div class="summary-item">
+        <span>1º lugar</span><strong id="prize1Amount">R$ 0,00</strong>
       </div>
-
-      <textarea id="summaryText" readonly
-        style="width:100%;min-height:120px;border-radius:8px;border:1px solid #d0d0d4;
-               padding:6px 8px;font-size:13px;resize:vertical;">
-      </textarea>
-
-      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-        <button id="copySummary" class="btn"
-          style="flex:1;min-width:120px;background:#34c759;color:white;">
-          Copiar resumo
-        </button>
-        <a id="whatsSummary" class="btn"
-          style="flex:1;min-width:120px;text-align:center;text-decoration:none;background:#25d366;color:white;">
-          WhatsApp
-        </a>
+      <div class="summary-item">
+        <span>2º lugar</span><strong id="prize2Amount">R$ 0,00</strong>
       </div>
-
-      <button id="exportImageBtn" class="btn"
-        style="margin-top:8px;background:#111;color:#fff;width:100%;">
-        Exportar cartão (PNG)
-      </button>
+      <div class="summary-item">
+        <span>3º lugar</span><strong id="prize3Amount">R$ 0,00</strong>
+      </div>
 
       <button id="recalcBtn" class="btn btn-primary">Recalcular</button>
-      <div class="small-note">Tudo é recalculado automaticamente, mas você pode tocar em “Recalcular” a qualquer momento.</div>
+      <div class="small-note">Recalcula tudo; mas a maioria das mudanças já atualiza automaticamente.</div>
     </section>
   </main>
 
@@ -442,10 +409,10 @@
   </footer>
 
   <script>
-    const STORAGE_KEY = "poker_tracker_state_v5";
+    const STORAGE_KEY = "poker_tracker_state_v2";
     const THEME_KEY = "poker_tracker_theme";
 
-    // Formatação de moeda BRL
+    // Formatação R$
     let moneyFormatter;
     try {
       moneyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -465,29 +432,27 @@
       return moneyFormatter.format(v || 0);
     }
 
-    function formatDateBR(d) {
-      return d.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+    function toNumber(v, def = 0) {
+      if (v === null || v === undefined) return def;
+      const normalized = String(v).replace(",", ".");
+      const n = parseFloat(normalized);
+      return isNaN(n) ? def : n;
     }
 
     function defaultState() {
       return {
         settings: {
-          buyInValue: 50,
-          rebuyValue: 50,
+          buyInValue: 100,
+          rebuyValue: 100,
           prize1: 50,
           prize2: 30,
           prize3: 20,
         },
         players: Array.from({ length: 10 }, (_, i) => ({
           id: i,
-          name: "Jogador " + (i + 1),
+          name: "",
           buyIns: 0,
           rebuys: 0,
-          position: 0,
         })),
       };
     }
@@ -497,30 +462,10 @@
         const data = localStorage.getItem(STORAGE_KEY);
         if (!data) return defaultState();
         const parsed = JSON.parse(data);
-
-        let players = parsed.players;
-        if (!Array.isArray(players) || players.length !== 10) {
-          players = defaultState().players;
-        } else {
-          players = players.map((p, i) => ({
-            id: p.id ?? i,
-            name: (p.name && p.name.trim()) ? p.name : ("Jogador " + (i + 1)),
-            buyIns: p.buyIns ?? 0,
-            rebuys: p.rebuys ?? 0,
-            position: p.position ?? 0,
-          }));
+        if (!parsed.players || parsed.players.length !== 10) {
+          parsed.players = defaultState().players;
         }
-
-        return {
-          settings: {
-            buyInValue: parsed.settings?.buyInValue ?? 50,
-            rebuyValue: parsed.settings?.rebuyValue ?? 50,
-            prize1: parsed.settings?.prize1 ?? 50,
-            prize2: parsed.settings?.prize2 ?? 30,
-            prize3: parsed.settings?.prize3 ?? 20,
-          },
-          players,
-        };
+        return parsed;
       } catch (e) {
         console.error("Error loading state", e);
         return defaultState();
@@ -535,16 +480,9 @@
       }
     }
 
-    function toNumber(v, def = 0) {
-      if (v === null || v === undefined) return def;
-      const normalized = String(v).replace(",", ".");
-      const n = parseFloat(normalized);
-      return isNaN(n) ? def : n;
-    }
-
     let state = loadState();
 
-    // Elements
+    // DOM refs
     const buyInInput = document.getElementById("buyInValue");
     const rebuyInput = document.getElementById("rebuyValue");
     const prize1Input = document.getElementById("prize1");
@@ -558,16 +496,12 @@
     const totalFromBuyInsEl = document.getElementById("totalFromBuyIns");
     const totalFromRebuysEl = document.getElementById("totalFromRebuys");
     const totalPotEl = document.getElementById("totalPot");
-
-    const summaryTextEl = document.getElementById("summaryText");
-    const copySummaryBtn = document.getElementById("copySummary");
-    const whatsSummaryLink = document.getElementById("whatsSummary");
-    const exportImageBtn = document.getElementById("exportImageBtn");
-    const rankingUIEl = document.getElementById("rankingUI");
-
+    const prize1AmountEl = document.getElementById("prize1Amount");
+    const prize2AmountEl = document.getElementById("prize2Amount");
+    const prize3AmountEl = document.getElementById("prize3Amount");
     const themeToggleBtn = document.getElementById("themeToggle");
 
-    // THEME
+    // Tema
     function applyTheme(theme) {
       if (theme === "dark") {
         document.body.classList.add("dark");
@@ -594,15 +528,6 @@
     themeToggleBtn.addEventListener("click", toggleTheme);
     loadTheme();
 
-    // Cabeçalho com data
-    (function updateHeaderTitleWithDate() {
-      const titleEl = document.getElementById("pageTitle");
-      if (!titleEl) return;
-      const today = new Date();
-      const dateStr = formatDateBR(today);
-      titleEl.textContent = "Poker - " + dateStr;
-    })();
-
     function renderSettings() {
       buyInInput.value = state.settings.buyInValue;
       rebuyInput.value = state.settings.rebuyValue;
@@ -625,89 +550,15 @@
       }
     }
 
-    function computeTotalsAndPrizes() {
-      const buyInValue = toNumber(state.settings.buyInValue);
-      const rebuyValue = toNumber(state.settings.rebuyValue);
-
-      let totalBuyIns = 0;
-      let totalRebuys = 0;
-
-      state.players.forEach((p) => {
-        totalBuyIns += toNumber(p.buyIns);
-        totalRebuys += toNumber(p.rebuys);
-      });
-
-      const totalFromBuyIns = totalBuyIns * buyInValue;
-      const totalFromRebuys = totalRebuys * rebuyValue;
-      const totalPot = totalFromBuyIns + totalFromRebuys;
-
-      const p1 = toNumber(state.settings.prize1);
-      const p2 = toNumber(state.settings.prize2);
-      const p3 = toNumber(state.settings.prize3);
-
-      let prize1Amount = (totalPot * p1) / 100;
-      let prize2Amount = (totalPot * p2) / 100;
-      let prize3Amount = (totalPot * p3) / 100;
-
-      const totalPrizes = prize1Amount + prize2Amount + prize3Amount;
-      const diff = totalPot - totalPrizes;
-      prize1Amount += diff; // joga resíduo no 1º lugar
-
-      return {
-        buyInValue,
-        rebuyValue,
-        totalBuyIns,
-        totalRebuys,
-        totalFromBuyIns,
-        totalFromRebuys,
-        totalPot,
-        prize1Amount,
-        prize2Amount,
-        prize3Amount,
-      };
-    }
-
-    function updatePlayer(originalIndex, newBuyIns, newRebuys) {
-      const player = state.players[originalIndex];
-      player.buyIns = Math.max(0, Math.floor(toNumber(newBuyIns, 0)));
-      player.rebuys = Math.max(0, Math.floor(toNumber(newRebuys, 0)));
-      saveState(state);
-      renderPlayers();
-      recalc();
-    }
-
-    function setPositionForPlayer(playerIndex, newPos) {
-      // Garante exclusividade: só um jogador por posição (1,2,3)
-      state.players.forEach((pl, i) => {
-        if (i !== playerIndex && pl.position === newPos && newPos !== 0) {
-          pl.position = 0;
-        }
-      });
-      state.players[playerIndex].position = newPos;
-      saveState(state);
-      renderPlayers();
-      recalc();
-    }
-
     function renderPlayers() {
       playersContainer.innerHTML = "";
 
-      const {
-        buyInValue,
-        rebuyValue,
-        prize1Amount,
-        prize2Amount,
-        prize3Amount,
-      } = computeTotalsAndPrizes();
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
 
       const playersWithIndex = state.players.map((p, index) => {
         const totalSpent = p.buyIns * buyInValue + p.rebuys * rebuyValue;
-        let prize = 0;
-        if (p.position === 1) prize = prize1Amount;
-        if (p.position === 2) prize = prize2Amount;
-        if (p.position === 3) prize = prize3Amount;
-        const net = prize - totalSpent;
-        return { ...p, index, totalSpent, prize, net };
+        return { ...p, index, totalSpent };
       });
 
       const totals = playersWithIndex.map((p) => p.totalSpent);
@@ -716,7 +567,7 @@
       const minSpent =
         positiveTotals.length > 0 ? Math.min(...positiveTotals) : 0;
 
-      // Ordena do que mais gastou para o que menos gastou
+      // Ordena do maior gasto para o menor
       playersWithIndex.sort((a, b) => b.totalSpent - a.totalSpent);
 
       playersWithIndex.forEach((p) => {
@@ -739,7 +590,6 @@
         nameInput.addEventListener("input", () => {
           state.players[p.index].name = nameInput.value;
           saveState(state);
-          recalc();
         });
         nameDiv.appendChild(nameInput);
 
@@ -751,17 +601,17 @@
         const buyMinus = document.createElement("button");
         buyMinus.textContent = "–";
 
-        const buyInputEl = document.createElement("input");
-        buyInputEl.type = "number";
-        buyInputEl.min = "0";
-        buyInputEl.step = "1";
-        buyInputEl.value = p.buyIns;
+        const buyInput = document.createElement("input");
+        buyInput.type = "number";
+        buyInput.min = "0";
+        buyInput.step = "1";
+        buyInput.value = p.buyIns;
 
         const buyPlus = document.createElement("button");
         buyPlus.textContent = "+";
 
         buyCounter.appendChild(buyMinus);
-        buyCounter.appendChild(buyInputEl);
+        buyCounter.appendChild(buyInput);
         buyCounter.appendChild(buyPlus);
         buyDiv.appendChild(buyCounter);
 
@@ -773,17 +623,17 @@
         const rebuyMinus = document.createElement("button");
         rebuyMinus.textContent = "–";
 
-        const rebuyInputEl = document.createElement("input");
-        rebuyInputEl.type = "number";
-        rebuyInputEl.min = "0";
-        rebuyInputEl.step = "1";
-        rebuyInputEl.value = p.rebuys;
+        const rebuyInput = document.createElement("input");
+        rebuyInput.type = "number";
+        rebuyInput.min = "0";
+        rebuyInput.step = "1";
+        rebuyInput.value = p.rebuys;
 
         const rebuyPlus = document.createElement("button");
         rebuyPlus.textContent = "+";
 
         rebuyCounter.appendChild(rebuyMinus);
-        rebuyCounter.appendChild(rebuyInputEl);
+        rebuyCounter.appendChild(rebuyInput);
         rebuyCounter.appendChild(rebuyPlus);
         rebuyDiv.appendChild(rebuyCounter);
 
@@ -794,222 +644,64 @@
         spentLabel.textContent = formatMoney(p.totalSpent);
         spentDiv.appendChild(spentLabel);
 
-        // Posição + Resultado
-        const resultDiv = document.createElement("div");
-        resultDiv.style.display = "flex";
-        resultDiv.style.flexDirection = "column";
-        resultDiv.style.alignItems = "stretch";
-        resultDiv.style.gap = "2px";
-
-        const posSelect = document.createElement("select");
-        posSelect.style.width = "100%";
-        posSelect.style.borderRadius = "6px";
-        posSelect.style.border = "1px solid #d0d0d4";
-        posSelect.style.padding = "2px 4px";
-        posSelect.style.fontSize = "12px";
-
-        const optNone = document.createElement("option");
-        optNone.value = "0";
-        optNone.textContent = "-";
-        const opt1 = document.createElement("option");
-        opt1.value = "1";
-        opt1.textContent = "1º";
-        const opt2 = document.createElement("option");
-        opt2.value = "2";
-        opt2.textContent = "2º";
-        const opt3 = document.createElement("option");
-        opt3.value = "3";
-        opt3.textContent = "3º";
-
-        posSelect.appendChild(optNone);
-        posSelect.appendChild(opt1);
-        posSelect.appendChild(opt2);
-        posSelect.appendChild(opt3);
-        posSelect.value = String(p.position || 0);
-
-        posSelect.addEventListener("change", () => {
-          const newPos = parseInt(posSelect.value, 10) || 0;
-          setPositionForPlayer(p.index, newPos);
-        });
-
-        const netLabel = document.createElement("div");
-        const absNet = Math.abs(p.net || 0);
-        const netMoney = formatMoney(absNet);
-        if (p.net > 0) {
-          netLabel.textContent = "+" + netMoney;
-          netLabel.className = "net-profit";
-        } else if (p.net < 0) {
-          netLabel.textContent = "-" + netMoney;
-          netLabel.className = "net-loss";
-        } else {
-          netLabel.textContent = netMoney;
-          netLabel.className = "net-neutral";
-        }
-
-        resultDiv.appendChild(posSelect);
-        resultDiv.appendChild(netLabel);
-
         row.appendChild(nameDiv);
         row.appendChild(buyDiv);
         row.appendChild(rebuyDiv);
         row.appendChild(spentDiv);
-        row.appendChild(resultDiv);
-
         playersContainer.appendChild(row);
 
-        // Eventos de buy-in/rebuy
+        // Funções de update
+        function updatePlayer(newBuyIns, newRebuys) {
+          const idx = p.index;
+          state.players[idx].buyIns = Math.max(
+            0,
+            Math.floor(toNumber(newBuyIns, 0))
+          );
+          state.players[idx].rebuys = Math.max(
+            0,
+            Math.floor(toNumber(newRebuys, 0))
+          );
+          saveState(state);
+          renderPlayers();
+          recalc();
+        }
+
         buyMinus.addEventListener("click", () => {
-          updatePlayer(p.index, state.players[p.index].buyIns - 1, state.players[p.index].rebuys);
+          updatePlayer(p.buyIns - 1, p.rebuys);
         });
         buyPlus.addEventListener("click", () => {
-          updatePlayer(p.index, state.players[p.index].buyIns + 1, state.players[p.index].rebuys);
+          updatePlayer(p.buyIns + 1, p.rebuys);
         });
         rebuyMinus.addEventListener("click", () => {
-          updatePlayer(p.index, state.players[p.index].buyIns, state.players[p.index].rebuys - 1);
+          updatePlayer(p.buyIns, p.rebuys - 1);
         });
         rebuyPlus.addEventListener("click", () => {
-          updatePlayer(p.index, state.players[p.index].buyIns, state.players[p.index].rebuys + 1);
+          updatePlayer(p.buyIns, p.rebuys + 1);
         });
 
-        buyInputEl.addEventListener("change", () => {
-          updatePlayer(p.index, buyInputEl.value, state.players[p.index].rebuys);
+        buyInput.addEventListener("change", () => {
+          updatePlayer(buyInput.value, p.rebuys);
         });
-        rebuyInputEl.addEventListener("change", () => {
-          updatePlayer(p.index, state.players[p.index].buyIns, rebuyInputEl.value);
+        rebuyInput.addEventListener("change", () => {
+          updatePlayer(p.buyIns, rebuyInput.value);
         });
       });
-    }
-
-    function buildRanking(players, prize1Amount, prize2Amount, prize3Amount) {
-      const list = players.map((p, index) => {
-        const name = p.name || `Jogador ${index + 1}`;
-        let prize = 0;
-        if (p.position === 1) prize = prize1Amount;
-        if (p.position === 2) prize = prize2Amount;
-        if (p.position === 3) prize = prize3Amount;
-
-        return {
-          name,
-          prize,
-          position: p.position,
-        };
-      });
-
-      list.sort((a, b) => (a.position || 999) - (b.position || 999));
-
-      return list
-        .filter(p => p.position) // só quem tem posição
-        .map(p => {
-          let emoji = "";
-          if (p.position === 1) emoji = "🥇";
-          else if (p.position === 2) emoji = "🥈";
-          else if (p.position === 3) emoji = "🥉";
-
-          const posLabel = `${p.position}º`;
-          return `${emoji} ${posLabel} — ${p.name} (${formatMoney(p.prize || 0)})`;
-        });
-    }
-
-    function buildShortSummary(prize1Amount, prize2Amount, prize3Amount) {
-      const { totalPot } = computeTotalsAndPrizes();
-      const dateStr = formatDateBR(new Date());
-
-      const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
-      const rankingShort = rankingLines.slice(0, 3).join(" | ") || "sem vencedores definidos";
-
-      return `Poker - ${dateStr}
-Pote total: ${formatMoney(totalPot)}
-Ranking: ${rankingShort}`;
-    }
-
-    function buildSummary() {
-      const {
-        buyInValue,
-        rebuyValue,
-        totalBuyIns,
-        totalRebuys,
-        totalFromBuyIns,
-        totalFromRebuys,
-        totalPot,
-        prize1Amount,
-        prize2Amount,
-        prize3Amount,
-      } = computeTotalsAndPrizes();
-
-      const playersLines = [];
-      const today = new Date();
-      const dateStr = formatDateBR(today);
-
-      state.players.forEach((p, i) => {
-        const name = p.name?.trim() || `Jogador ${i + 1}`;
-        const buyIns = toNumber(p.buyIns);
-        const rebuys = toNumber(p.rebuys);
-
-        // Só jogadores com 1 ou mais buy-ins entram no resumo
-        if (buyIns < 1) return;
-
-        const spent = buyIns * buyInValue + rebuys * rebuyValue;
-
-        const buyInValueTotal = buyIns * buyInValue;
-        const rebuyValueTotal = rebuys * rebuyValue;
-
-        const biText = `${buyIns}×BI (${formatMoney(buyInValueTotal)})`;
-        const rbText = `${rebuys}×RB (${formatMoney(rebuyValueTotal)})`;
-
-        let prize = 0;
-        if (p.position === 1) prize = prize1Amount;
-        if (p.position === 2) prize = prize2Amount;
-        if (p.position === 3) prize = prize3Amount;
-
-        const net = prize - spent;
-        const absNet = Math.abs(net);
-        const netMoney = formatMoney(absNet);
-        const netLabel = net > 0 ? `+${netMoney}` : net < 0 ? `-${netMoney}` : netMoney;
-
-        const posLabel = p.position ? `${p.position}º` : "-";
-
-        playersLines.push(
-          `${name} — ${biText} | ${rbText} | Total: ${formatMoney(spent)} | ` +
-          `Posição: ${posLabel} | Prêmio: ${formatMoney(prize)} | Resultado: ${netLabel}`
-        );
-      });
-
-      const lines = [];
-
-      // Primeira linha: Poker - DATA
-      lines.push(`Poker - ${dateStr}`);
-      lines.push("");
-      lines.push(`Total buy-ins: ${totalBuyIns} (${formatMoney(totalFromBuyIns)})`);
-      lines.push(`Total rebuys: ${totalRebuys} (${formatMoney(totalFromRebuys)})`);
-      lines.push(`POTE TOTAL: ${formatMoney(totalPot)}`);
-      lines.push("");
-
-      const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
-      if (rankingLines.length) {
-        lines.push("Ranking final:");
-        rankingLines.forEach(line => lines.push(line));
-        lines.push("");
-      }
-
-      if (playersLines.length) {
-        lines.push("Jogadores:");
-        lines.push(...playersLines);
-      }
-
-      return lines.join("\n");
     }
 
     function recalc() {
-      const {
-        totalBuyIns,
-        totalRebuys,
-        totalFromBuyIns,
-        totalFromRebuys,
-        totalPot,
-        prize1Amount,
-        prize2Amount,
-        prize3Amount,
-      } = computeTotalsAndPrizes();
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+
+      let totalBuyIns = 0;
+      let totalRebuys = 0;
+      state.players.forEach((p) => {
+        totalBuyIns += toNumber(p.buyIns);
+        totalRebuys += toNumber(p.rebuys);
+      });
+
+      const totalFromBuyIns = totalBuyIns * buyInValue;
+      const totalFromRebuys = totalRebuys * rebuyValue;
+      const totalPot = totalFromBuyIns + totalFromRebuys;
 
       totalBuyInsEl.textContent = totalBuyIns;
       totalRebuysEl.textContent = totalRebuys;
@@ -1017,30 +709,24 @@ Ranking: ${rankingShort}`;
       totalFromRebuysEl.textContent = formatMoney(totalFromRebuys);
       totalPotEl.textContent = formatMoney(totalPot);
 
-      const fullSummary = buildSummary();
-      const shortSummary = buildShortSummary(prize1Amount, prize2Amount, prize3Amount);
+      const p1 = toNumber(state.settings.prize1);
+      const p2 = toNumber(state.settings.prize2);
+      const p3 = toNumber(state.settings.prize3);
 
-      if (summaryTextEl) {
-        summaryTextEl.value = fullSummary;
-      }
-      if (whatsSummaryLink) {
-        // WhatsApp recebe apenas o resumo curto (pote total + ranking, sem ganhos/perdas)
-        whatsSummaryLink.href = "https://wa.me/?text=" + encodeURIComponent(shortSummary);
-      }
+      let prize1Amount = (totalPot * p1) / 100;
+      let prize2Amount = (totalPot * p2) / 100;
+      let prize3Amount = (totalPot * p3) / 100;
 
-      if (rankingUIEl) {
-        const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
-        if (rankingLines.length) {
-          rankingUIEl.innerHTML =
-            `<strong>Ranking final:</strong><br>` +
-            rankingLines.join("<br>");
-        } else {
-          rankingUIEl.innerHTML = "";
-        }
-      }
+      const totalPrizes = prize1Amount + prize2Amount + prize3Amount;
+      const diff = totalPot - totalPrizes;
+      prize1Amount += diff; // ajusta centavos
+
+      prize1AmountEl.textContent = formatMoney(prize1Amount);
+      prize2AmountEl.textContent = formatMoney(prize2Amount);
+      prize3AmountEl.textContent = formatMoney(prize3Amount);
     }
 
-    // Listeners settings
+    // Listeners de settings
     buyInInput.addEventListener("change", () => {
       state.settings.buyInValue = toNumber(buyInInput.value, 0);
       saveState(state);
@@ -1061,7 +747,6 @@ Ranking: ${rankingShort}`;
       state.settings.prize3 = toNumber(prize3Input.value, 0);
       saveState(state);
       updatePrizeSumWarning();
-      renderPlayers();
       recalc();
     }
 
@@ -1079,111 +764,6 @@ Ranking: ${rankingShort}`;
       renderPlayers();
       recalc();
     });
-
-    if (copySummaryBtn) {
-      copySummaryBtn.addEventListener("click", async () => {
-        const text = summaryTextEl?.value || "";
-        if (!text.trim()) return;
-
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(text);
-            alert("Resumo copiado para a área de transferência.");
-          } else {
-            summaryTextEl.select();
-            document.execCommand("copy");
-            alert("Resumo copiado (modo compatibilidade).");
-          }
-        } catch (e) {
-          console.error(e);
-          alert("Não foi possível copiar o resumo.");
-        }
-      });
-    }
-
-    if (exportImageBtn) {
-      exportImageBtn.addEventListener("click", () => {
-        const text = summaryTextEl?.value || "";
-        if (!text.trim()) {
-          alert("Não há resumo para exportar.");
-          return;
-        }
-
-        const canvas = document.createElement("canvas");
-        canvas.width = 1080;
-        canvas.height = 1350;
-        const ctx = canvas.getContext("2d");
-
-        // Fundo
-        ctx.fillStyle = "#111111";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Cartão central
-        const margin = 80;
-        const cardX = margin;
-        const cardY = margin + 40;
-        const cardW = canvas.width - margin * 2;
-        const cardH = canvas.height - margin * 2 - 40;
-
-        if (ctx.roundRect) {
-          ctx.fillStyle = "#1e1e20";
-          ctx.roundRect(cardX, cardY, cardW, cardH, 40);
-          ctx.fill();
-        } else {
-          ctx.fillStyle = "#1e1e20";
-          ctx.fillRect(cardX, cardY, cardW, cardH);
-        }
-
-        // Título
-        ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 48px -apple-system, system-ui, sans-serif";
-        const today = new Date();
-        const title = "Poker - " + formatDateBR(today);
-        const titleWidth = ctx.measureText(title).width;
-        ctx.fillText(title, canvas.width / 2 - titleWidth / 2, cardY + 70);
-
-        // Texto do resumo
-        ctx.font = "28px -apple-system, system-ui, sans-serif";
-        ctx.fillStyle = "#f5f5f7";
-        const lines = text.split("\n");
-        const maxTextWidth = cardW - 60;
-        let y = cardY + 120;
-
-        function drawWrapped(line) {
-          const words = line.split(" ");
-          let current = "";
-          for (let w of words) {
-            const test = current ? current + " " + w : w;
-            if (ctx.measureText(test).width > maxTextWidth) {
-              ctx.fillText(current, cardX + 30, y);
-              y += 36;
-              current = w;
-            } else {
-              current = test;
-            }
-          }
-          if (current) {
-            ctx.fillText(current, cardX + 30, y);
-            y += 36;
-          }
-        }
-
-        for (const line of lines) {
-          if (!line.trim()) {
-            y += 20;
-            continue;
-          }
-          drawWrapped(line);
-          if (y > cardY + cardH - 40) break;
-        }
-
-        const dataUrl = canvas.toDataURL("image/png");
-        const a = document.createElement("a");
-        a.href = dataUrl;
-        a.download = "poker-resumo.png";
-        a.click();
-      });
-    }
 
     // Inicialização
     renderSettings();
