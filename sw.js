@@ -1,5 +1,5 @@
 // Mude esse número SEMPRE que fizer uma mudança grande no app
-const CACHE_VERSION = "v1"; 
+const CACHE_VERSION = "v2"; 
 const CACHE_NAME = "poker-tracker-cache-" + CACHE_VERSION;
 
 const CORE_ASSETS = [
