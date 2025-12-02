@@ -376,10 +376,10 @@
 
     <!-- Players -->
     <section class="card">
-      <div class="card-title">Jogadores (até 10)</div>
+      <div class="card-title">Jogadores</div>
       <div class="player-head">
         <div>Jogador</div>
-        <div>Buy-ins</div>
+        <div><center>Buy-ins</center></div>
         <div>Rebuys</div>
         <div>Total gasto</div>
         <div>Pos/Res</div>
@@ -399,14 +399,8 @@
       <div class="summary-item">
         <span>Total de rebuys</span><strong id="totalRebuys">0</strong>
       </div>
-      <div class="summary-item">
-        <span>Arrecadado em buy-ins</span><strong id="totalFromBuyIns">R$ 0,00</strong>
-      </div>
-      <div class="summary-item">
-        <span>Arrecadado em rebuys</span><strong id="totalFromRebuys">R$ 0,00</strong>
-      </div>
       <div class="total-pot">
-        Pote total: <span id="totalPot">R$ 0,00</span>
+        POTE TOAL: <span id="totalPot">R$ 0,00</span>
       </div>
 
       <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
@@ -985,10 +979,9 @@ Ranking: ${rankingShort}`;
       // Primeira linha: Poker - DATA
       lines.push(`Poker - ${dateStr}`);
       lines.push("");
-      lines.push(`Buy-in: ${formatMoney(buyInValue)} | Rebuy: ${formatMoney(rebuyValue)}`);
       lines.push(`Total buy-ins: ${totalBuyIns} (${formatMoney(totalFromBuyIns)})`);
       lines.push(`Total rebuys: ${totalRebuys} (${formatMoney(totalFromRebuys)})`);
-      lines.push(`Pote total: ${formatMoney(totalPot)}`);
+      lines.push(`POTE TOTAL: ${formatMoney(totalPot)}`);
       lines.push("");
 
       const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
