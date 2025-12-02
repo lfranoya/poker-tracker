@@ -86,6 +86,15 @@
       gap: 6px;
     }
 
+    .card-subtitle {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 10px 0 4px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
     .results-date {
       font-size: 13px;
       font-weight: 400;
@@ -221,6 +230,10 @@
       font-weight: 600;
     }
 
+    .money-blue {
+      color: #007aff;
+    }
+
     .total-pot {
       font-size: 18px;
       font-weight: 700;
@@ -274,6 +287,17 @@
       text-align: center;
       padding: 6px 12px 10px;
       color: #666;
+    }
+
+    /* pay/receber */
+    .pay-receive {
+      font-weight: 600;
+    }
+    .pay-receive--positive {
+      color: #34c759;
+    }
+    .pay-receive--negative {
+      color: #ff3b30;
     }
 
     /* Dark mode */
@@ -375,6 +399,12 @@
       text-overflow: ellipsis;
     }
 
+    .detailed-item {
+      font-size: 14px;
+      margin: 2px 0;
+      text-align: left;
+    }
+
     /* Canvas (card PNG) */
     #summaryCanvas {
       display: none;
@@ -460,33 +490,30 @@
 
       <hr style="margin:12px 0 8px;border:none;border-top:1px solid #eee;">
 
-      <!-- Tabela de prêmios com nomes -->
+      <!-- Tabela de prêmios com nomes + paga/receber -->
       <div class="summary-item">
-        <span>1º lugar: <span id="prize1Player">—</span></span>
+        <span id="prize1Label">🥇 1º lugar: —</span>
         <strong id="prize1Amount">R$ 0,00</strong>
       </div>
       <div class="summary-item">
-        <span>2º lugar: <span id="prize2Player">—</span></span>
+        <span id="prize2Label">🥈 2º lugar: —</span>
         <strong id="prize2Amount">R$ 0,00</strong>
       </div>
       <div class="summary-item">
-        <span>3º lugar: <span id="prize3Player">—</span></span>
+        <span id="prize3Label">🥉 3º lugar: —</span>
         <strong id="prize3Amount">R$ 0,00</strong>
       </div>
+
+      <!-- COLOCAÇÕES e RESULTADOS DETALHADOS antes dos botões -->
+      <div class="card-subtitle">COLOCAÇÕES</div>
+      <div id="rankingList" class="ranking-list"></div>
+
+      <div class="card-subtitle">RESULTADOS DETALHADOS</div>
+      <div id="playersSummaryList" class="ranking-list"></div>
 
       <button id="recalcBtn" class="btn btn-primary">Recalcular</button>
       <button id="whatsappShareBtn" class="btn btn-secondary">Enviar resumo no WhatsApp</button>
       <button id="pngCardBtn" class="btn btn-secondary">Gerar card em PNG</button>
-
-      <div class="small-note" style="margin-top:10px;font-weight:600;">
-        Colocações:
-      </div>
-      <div id="rankingList" class="ranking-list"></div>
-
-      <div class="small-note" style="margin-top:10px;font-weight:600;">
-        Resultados detalhados:
-      </div>
-      <div id="playersSummaryList" class="ranking-list"></div>
 
       <!-- Canvas escondido para gerar o card PNG -->
       <canvas id="summaryCanvas" width="900" height="700"></canvas>
@@ -620,9 +647,9 @@
     const prize2AmountEl = document.getElementById("prize2Amount");
     const prize3AmountEl = document.getElementById("prize3Amount");
 
-    const prize1PlayerEl = document.getElementById("prize1Player");
-    const prize2PlayerEl = document.getElementById("prize2Player");
-    const prize3PlayerEl = document.getElementById("prize3Player");
+    const prize1LabelEl = document.getElementById("prize1Label");
+    const prize2LabelEl = document.getElementById("prize2Label");
+    const prize3LabelEl = document.getElementById("prize3Label");
 
     const rankingListEl = document.getElementById("rankingList");
     const playersSummaryListEl = document.getElementById("playersSummaryList");
@@ -703,7 +730,6 @@
     }
 
     function updatePrizeWinners(playersWithTotalsSorted) {
-      // Descobre quem é 1º, 2º, 3º pela coluna placement
       const byPlacement = (place) =>
         playersWithTotalsSorted.find(p => p.placement === String(place) && p.buyIns > 0);
 
@@ -711,9 +737,34 @@
       const p2 = byPlacement(2);
       const p3 = byPlacement(3);
 
-      prize1PlayerEl.textContent = p1 ? (p1.name || ("Jogador " + (p1.index + 1))) : "—";
-      prize2PlayerEl.textContent = p2 ? (p2.name || ("Jogador " + (p2.index + 1))) : "—";
-      prize3PlayerEl.textContent = p3 ? (p3.name || ("Jogador " + (p3.index + 1))) : "—";
+      // rótulos com ícones + nome
+      prize1LabelEl.textContent = "🥇 1º lugar: " + (p1 ? (p1.name || ("Jogador " + (p1.index + 1))) : "—");
+      prize2LabelEl.textContent = "🥈 2º lugar: " + (p2 ? (p2.name || ("Jogador " + (p2.index + 1))) : "—");
+      prize3LabelEl.textContent = "🥉 3º lugar: " + (p3 ? (p3.name || ("Jogador " + (p3.index + 1))) : "—");
+
+      // paga/receber nas linhas de prêmio
+      function buildPrizeAmountEl(player, prizeAmount, element) {
+        if (!player || prizeAmount <= 0) {
+          element.textContent = formatMoney(prizeAmount || 0);
+          return;
+        }
+        const pagaRecebe = prizeAmount - player.totalSpent;
+        if (pagaRecebe > 0) {
+          element.innerHTML =
+            `${formatMoney(prizeAmount)} ` +
+            `<span class="pay-receive pay-receive--positive">(receber ${formatMoney(Math.abs(pagaRecebe))})</span>`;
+        } else if (pagaRecebe < 0) {
+          element.innerHTML =
+            `${formatMoney(prizeAmount)} ` +
+            `<span class="pay-receive pay-receive--negative">(pagar ${formatMoney(Math.abs(pagaRecebe))})</span>`;
+        } else {
+          element.innerHTML = `${formatMoney(prizeAmount)} <span class="pay-receive">(R$ 0,00)</span>`;
+        }
+      }
+
+      buildPrizeAmountEl(p1, prizeCache.p1, prize1AmountEl);
+      buildPrizeAmountEl(p2, prizeCache.p2, prize2AmountEl);
+      buildPrizeAmountEl(p3, prizeCache.p3, prize3AmountEl);
     }
 
     function renderRankingAndSummary(playersWithTotalsSorted) {
@@ -761,7 +812,19 @@
             p.placement === "3" ? prizeCache.p3 : 0;
           const pagaRecebe = placePrize - p.totalSpent;
 
-          right.textContent = `Prêmio: ${formatMoney(placePrize)} | Paga/recebe: ${formatMoney(pagaRecebe)}`;
+          if (pagaRecebe > 0) {
+            right.innerHTML =
+              `Prêmio: ${formatMoney(placePrize)} | ` +
+              `<span class="pay-receive pay-receive--positive">receber ${formatMoney(Math.abs(pagaRecebe))}</span>`;
+          } else if (pagaRecebe < 0) {
+            right.innerHTML =
+              `Prêmio: ${formatMoney(placePrize)} | ` +
+              `<span class="pay-receive pay-receive--negative">pagar ${formatMoney(Math.abs(pagaRecebe))}</span>`;
+          } else {
+            right.innerHTML =
+              `Prêmio: ${formatMoney(placePrize)} | ` +
+              `<span class="pay-receive">${formatMoney(0)}</span>`;
+          }
 
           div.appendChild(left);
           div.appendChild(right);
@@ -769,7 +832,7 @@
         });
       }
 
-      // Lista de todos os jogadores com 1+ buy-in
+      // Lista de todos os jogadores com 1+ buy-in (Resultados detalhados)
       const summaryPlayers = playersWithTotalsSorted
         .filter(p => p.buyIns >= 1)
         .sort((a, b) => b.totalSpent - a.totalSpent);
@@ -780,28 +843,33 @@
       } else {
         summaryPlayers.forEach((p) => {
           const div = document.createElement("div");
-          div.className = "ranking-item";
+          div.className = "detailed-item";
 
-          const left = document.createElement("div");
-          left.className = "ranking-left";
-
-          const nameSpan = document.createElement("span");
-          nameSpan.className = "ranking-name";
-          const name = p.name || ("Jogador " + (p.index + 1));
-          nameSpan.textContent = name;
-
-          left.appendChild(nameSpan);
-
-          const right = document.createElement("div");
           const totalBuyInValue = p.buyIns * buyInValue;
           const totalRebuyValue = p.rebuys * rebuyValue;
-          right.textContent =
-            `BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
-            `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
-            `TOTAL: ${formatMoney(p.totalSpent)}`;
+          const placePrize =
+            p.placement === "1" ? prizeCache.p1 :
+            p.placement === "2" ? prizeCache.p2 :
+            p.placement === "3" ? prizeCache.p3 : 0;
+          const pagaRecebe = placePrize - p.totalSpent;
 
-          div.appendChild(left);
-          div.appendChild(right);
+          let pagaRecebeHTML = "";
+          if (pagaRecebe > 0) {
+            pagaRecebeHTML = `<span class="pay-receive pay-receive--positive">receber ${formatMoney(Math.abs(pagaRecebe))}</span>`;
+          } else if (pagaRecebe < 0) {
+            pagaRecebeHTML = `<span class="pay-receive pay-receive--negative">pagar ${formatMoney(Math.abs(pagaRecebe))}</span>`;
+          } else {
+            pagaRecebeHTML = `<span class="pay-receive">${formatMoney(0)}</span>`;
+          }
+
+          const name = p.name || ("Jogador " + (p.index + 1));
+          div.innerHTML =
+            `${name} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) ` +
+            `| RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) ` +
+            `| GASTO: ${formatMoney(p.totalSpent)} ` +
+            `| PRÊMIO: ${formatMoney(placePrize)} ` +
+            `| Paga/recebe: ${pagaRecebeHTML}`;
+
           playersSummaryListEl.appendChild(div);
         });
       }
@@ -995,9 +1063,11 @@
       const totalFromRebuys = totalRebuys * rebuyValue;
       const totalPot = totalFromBuyIns + totalFromRebuys;
 
-      // agora já com valores em R$ entre parênteses
-      totalBuyInsEl.textContent = `${totalBuyIns} (${formatMoney(totalFromBuyIns)})`;
-      totalRebuysEl.textContent = `${totalRebuys} (${formatMoney(totalFromRebuys)})`;
+      // Totais com valor arrecadado em azul
+      totalBuyInsEl.innerHTML =
+        `${totalBuyIns} (<span class="money-blue">${formatMoney(totalFromBuyIns)}</span>)`;
+      totalRebuysEl.innerHTML =
+        `${totalRebuys} (<span class="money-blue">${formatMoney(totalFromRebuys)}</span>)`;
       totalPotEl.textContent = formatMoney(totalPot);
 
       const p1 = toNumber(state.settings.prize1);
@@ -1012,17 +1082,13 @@
       const diff = totalPot - totalPrizes;
       prize1Amount += diff; // ajustes de centavos
 
-      prize1AmountEl.textContent = formatMoney(prize1Amount);
-      prize2AmountEl.textContent = formatMoney(prize2Amount);
-      prize3AmountEl.textContent = formatMoney(prize3Amount);
-
       // Atualiza cache
       prizeCache.totalPot = totalPot;
       prizeCache.p1 = prize1Amount;
       prizeCache.p2 = prize2Amount;
       prizeCache.p3 = prize3Amount;
 
-      // Atualiza colocações e nomes de ganhadores
+      // Atualiza colocações e nomes de ganhadores (inclui linhas superiores)
       renderRankingAndSummary(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
     }
 
@@ -1060,7 +1126,10 @@
         lines.push("Resumo da rodada de poker");
       }
       lines.push(`Pote total: ${formatMoney(totalPot)}`);
-      lines.push(`Buy-ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)})`);
+      lines.push(
+        `Buy-ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
+        `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)})`
+      );
       lines.push("");
 
       if (rankingPlayers.length > 0) {
@@ -1080,10 +1149,22 @@
             place === "3" ? prizeCache.p3 : 0;
           const pagaRecebe = placePrize - p.totalSpent;
 
-          lines.push(
-            `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
-            `Paga/recebe: ${formatMoney(pagaRecebe)}`
-          );
+          if (pagaRecebe > 0) {
+            lines.push(
+              `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
+              `Paga/recebe: receber ${formatMoney(Math.abs(pagaRecebe))}`
+            );
+          } else if (pagaRecebe < 0) {
+            lines.push(
+              `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
+              `Paga/recebe: pagar ${formatMoney(Math.abs(pagaRecebe))}`
+            );
+          } else {
+            lines.push(
+              `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
+              `Paga/recebe: ${formatMoney(0)}`
+            );
+          }
         });
         lines.push("");
       } else {
@@ -1099,10 +1180,27 @@
           const name = p.name || `Jogador ${p.index + 1}`;
           const totalBuyInValue = p.buyIns * buyInValue;
           const totalRebuyValue = p.rebuys * rebuyValue;
+          const placePrize =
+            p.placement === "1" ? prizeCache.p1 :
+            p.placement === "2" ? prizeCache.p2 :
+            p.placement === "3" ? prizeCache.p3 : 0;
+          const pagaRecebe = placePrize - p.totalSpent;
+
+          let pagaRecebeText = "";
+          if (pagaRecebe > 0) {
+            pagaRecebeText = `receber ${formatMoney(Math.abs(pagaRecebe))}`;
+          } else if (pagaRecebe < 0) {
+            pagaRecebeText = `pagar ${formatMoney(Math.abs(pagaRecebe))}`;
+          } else {
+            pagaRecebeText = formatMoney(0);
+          }
+
           lines.push(
             `${name} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
             `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
-            `TOTAL: ${formatMoney(p.totalSpent)}`
+            `GASTO: ${formatMoney(p.totalSpent)} | ` +
+            `PRÊMIO: ${formatMoney(placePrize)} | ` +
+            `Paga/recebe: ${pagaRecebeText}`
           );
         });
       }
@@ -1196,11 +1294,22 @@
             place === "3" ? prizeCache.p3 : 0;
           const pagaRecebe = placePrize - p.totalSpent;
 
+          let pagaRecebeText = "";
+          if (pagaRecebe > 0) {
+            pagaRecebeText = `receber ${formatMoney(Math.abs(pagaRecebe))}`;
+          } else if (pagaRecebe < 0) {
+            pagaRecebeText = `pagar ${formatMoney(Math.abs(pagaRecebe))}`;
+          } else {
+            pagaRecebeText = formatMoney(0);
+          }
+
           const line =
             `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
-            `Paga/recebe: ${formatMoney(pagaRecebe)}`;
-          ctx.fillText(line, 40, y);
-          y += 24;
+            `Paga/recebe: ${pagaRecebeText}`;
+          if (y < height - 20) {
+            ctx.fillText(line, 40, y);
+            y += 24;
+          }
         });
       }
 
@@ -1217,10 +1326,27 @@
           const name = p.name || `Jogador ${p.index + 1}`;
           const totalBuyInValue = p.buyIns * buyInValue;
           const totalRebuyValue = p.rebuys * rebuyValue;
+          const placePrize =
+            p.placement === "1" ? prizeCache.p1 :
+            p.placement === "2" ? prizeCache.p2 :
+            p.placement === "3" ? prizeCache.p3 : 0;
+          const pagaRecebe = placePrize - p.totalSpent;
+
+          let pagaRecebeText = "";
+          if (pagaRecebe > 0) {
+            pagaRecebeText = `receber ${formatMoney(Math.abs(pagaRecebe))}`;
+          } else if (pagaRecebe < 0) {
+            pagaRecebeText = `pagar ${formatMoney(Math.abs(pagaRecebe))}`;
+          } else {
+            pagaRecebeText = formatMoney(0);
+          }
+
           const line =
             `${name} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
             `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
-            `TOTAL: ${formatMoney(p.totalSpent)}`;
+            `GASTO: ${formatMoney(p.totalSpent)} | ` +
+            `PRÊMIO: ${formatMoney(placePrize)} | ` +
+            `Paga/recebe: ${pagaRecebeText}`;
           if (y < height - 20) {
             ctx.fillText(line, 40, y);
             y += 22;
