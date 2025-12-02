@@ -484,7 +484,7 @@
       <div id="rankingList" class="ranking-list"></div>
 
       <div class="small-note" style="margin-top:10px;font-weight:600;">
-        Jogadores com 1 ou mais buy-ins:
+        Resultados detalhados:
       </div>
       <div id="playersSummaryList" class="ranking-list"></div>
 
@@ -759,9 +759,9 @@
             p.placement === "1" ? prizeCache.p1 :
             p.placement === "2" ? prizeCache.p2 :
             p.placement === "3" ? prizeCache.p3 : 0;
-          const saldo = placePrize - p.totalSpent;
+          const pagaRecebe = placePrize - p.totalSpent;
 
-          right.textContent = `Prêmio: ${formatMoney(placePrize)} | Saldo: ${formatMoney(saldo)}`;
+          right.textContent = `Prêmio: ${formatMoney(placePrize)} | Paga/recebe: ${formatMoney(pagaRecebe)}`;
 
           div.appendChild(left);
           div.appendChild(right);
@@ -995,8 +995,9 @@
       const totalFromRebuys = totalRebuys * rebuyValue;
       const totalPot = totalFromBuyIns + totalFromRebuys;
 
-      totalBuyInsEl.textContent = totalBuyIns;
-      totalRebuysEl.textContent = totalRebuys;
+      // agora já com valores em R$ entre parênteses
+      totalBuyInsEl.textContent = `${totalBuyIns} (${formatMoney(totalFromBuyIns)})`;
+      totalRebuysEl.textContent = `${totalRebuys} (${formatMoney(totalFromRebuys)})`;
       totalPotEl.textContent = formatMoney(totalPot);
 
       const p1 = toNumber(state.settings.prize1);
@@ -1059,7 +1060,7 @@
         lines.push("Resumo da rodada de poker");
       }
       lines.push(`Pote total: ${formatMoney(totalPot)}`);
-      lines.push(`Buy-ins: ${totalBuyIns} · Rebuys: ${totalRebuys}`);
+      lines.push(`Buy-ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)})`);
       lines.push("");
 
       if (rankingPlayers.length > 0) {
@@ -1077,11 +1078,11 @@
             place === "1" ? prizeCache.p1 :
             place === "2" ? prizeCache.p2 :
             place === "3" ? prizeCache.p3 : 0;
-          const saldo = placePrize - p.totalSpent;
+          const pagaRecebe = placePrize - p.totalSpent;
 
           lines.push(
             `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
-            `Saldo: ${formatMoney(saldo)}`
+            `Paga/recebe: ${formatMoney(pagaRecebe)}`
           );
         });
         lines.push("");
@@ -1090,7 +1091,7 @@
         lines.push("");
       }
 
-      lines.push("Jogadores com 1 ou mais buy-ins:");
+      lines.push("Resultados detalhados:");
       if (summaryPlayers.length === 0) {
         lines.push("Nenhum jogador com buy-in registrado.");
       } else {
@@ -1151,13 +1152,18 @@
       });
 
       const totalPot = prizeCache.totalPot;
-      ctx.fillText(`Pote total: ${formatMoney(totalPot)}`, 40, y);
-      y += 30;
-      ctx.fillText(`Buy-ins: ${totalBuyIns} · Rebuys: ${totalRebuys}`, 40, y);
-      y += 40;
-
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
+
+      ctx.fillText(`Pote total: ${formatMoney(totalPot)}`, 40, y);
+      y += 30;
+      ctx.fillText(
+        `Buy-ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
+        `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)})`,
+        40,
+        y
+      );
+      y += 40;
 
       const playersSorted = buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent);
       const rankingPlayers = playersSorted
@@ -1188,11 +1194,11 @@
             place === "1" ? prizeCache.p1 :
             place === "2" ? prizeCache.p2 :
             place === "3" ? prizeCache.p3 : 0;
-          const saldo = placePrize - p.totalSpent;
+          const pagaRecebe = placePrize - p.totalSpent;
 
           const line =
             `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
-            `Saldo: ${formatMoney(saldo)}`;
+            `Paga/recebe: ${formatMoney(pagaRecebe)}`;
           ctx.fillText(line, 40, y);
           y += 24;
         });
@@ -1200,7 +1206,7 @@
 
       y += 20;
       ctx.font = "18px -apple-system, system-ui, sans-serif";
-      ctx.fillText("Jogadores com 1 ou mais buy-ins:", 40, y);
+      ctx.fillText("Resultados detalhados:", 40, y);
       y += 30;
       ctx.font = "16px -apple-system, system-ui, sans-serif";
 
