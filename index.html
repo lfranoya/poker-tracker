@@ -45,9 +45,20 @@
       gap: 8px;
     }
 
+    .header-title-group {
+      display: flex;
+      flex-direction: column;
+    }
+
     header h1 {
       font-size: 20px;
       margin: 0;
+    }
+
+    .app-version {
+      font-size: 11px;
+      color: #999;
+      margin-top: 2px;
     }
 
     .theme-toggle {
@@ -84,6 +95,12 @@
       display: flex;
       align-items: baseline;
       gap: 6px;
+    }
+
+    /* RESULTADOS maior e mais forte */
+    #resultsTitle {
+      font-size: 18px;
+      font-weight: 700;
     }
 
     .card-subtitle {
@@ -235,8 +252,8 @@
     }
 
     .total-pot {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 16px;   /* um pouco menor que antes */
+      font-weight: 600;
       margin-top: 6px;
     }
 
@@ -268,6 +285,30 @@
       color: white;
       width: 100%;
       margin-top: 8px;
+    }
+
+    /* Botão WhatsApp */
+    .btn-whatsapp {
+      background: #25d366;
+      color: #ffffff;
+      width: 100%;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .wa-icon {
+      font-size: 18px;
+    }
+
+    /* Botão Card laranja */
+    .btn-card {
+      background: #ff9500;
+      color: #ffffff;
+      width: 100%;
+      margin-top: 6px;
     }
 
     .small-note {
@@ -343,6 +384,16 @@
       background: #ff453a;
     }
 
+    body.dark .btn-whatsapp {
+      background: #25d366;
+      color: #ffffff;
+    }
+
+    body.dark .btn-card {
+      background: #ff9f0a;
+      color: #ffffff;
+    }
+
     body.dark .small-note {
       color: #aaa;
     }
@@ -413,7 +464,10 @@
 </head>
 <body>
   <header>
-    <h1 id="headerTitle">Poker</h1>
+    <div class="header-title-group">
+      <h1 id="headerTitle">Poker</h1>
+      <div id="appVersion" class="app-version"></div>
+    </div>
     <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">🌙</button>
   </header>
 
@@ -473,7 +527,7 @@
 
     <!-- RESULTADOS -->
     <section class="card">
-      <div class="card-title">
+      <div class="card-title" id="resultsTitle">
         <span>RESULTADOS</span>
         <span id="resultsDateLabel" class="results-date"></span>
       </div>
@@ -506,15 +560,18 @@
       <hr style="margin:12px 0 8px;border:none;border-top:2px solid #555;">
 
       <!-- COLOCAÇÕES e RESULTADOS DETALHADOS antes dos botões -->
-      <div class="card-subtitle">COLOCAÇÕES</div>
+      <div class="card-subtitle" style="font-style:italic;">COLOCAÇÕES</div>
       <div id="rankingList" class="ranking-list"></div>
 
-      <div class="card-subtitle">RESULTADOS DETALHADOS</div>
+      <div class="card-subtitle" style="font-style:italic;">RESULTADOS DETALHADOS</div>
       <div id="playersSummaryList" class="ranking-list"></div>
 
       <button id="recalcBtn" class="btn btn-primary">Recalcular</button>
-      <button id="whatsappShareBtn" class="btn btn-secondary">Enviar resumo no WhatsApp</button>
-      <button id="pngCardBtn" class="btn btn-secondary">Gerar card em PNG</button>
+      <button id="whatsappShareBtn" class="btn btn-whatsapp">
+        <span class="wa-icon">🟢</span>
+        <span>Enviar WhatsApp</span>
+      </button>
+      <button id="pngCardBtn" class="btn btn-card">Gerar Card</button>
 
       <!-- Canvas escondido para gerar o card PNG -->
       <canvas id="summaryCanvas" width="900" height="700"></canvas>
@@ -526,8 +583,9 @@
   </footer>
 
   <script>
-    const STORAGE_KEY = "poker_tracker_state_v4";
-    const THEME_KEY = "poker_tracker_theme";
+    const APP_VERSION = "v1.0";
+    const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
+    const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
     // Cache de prêmios para usar em ranking, WhatsApp e card
     let prizeCache = {
@@ -567,8 +625,8 @@
     function defaultState() {
       return {
         settings: {
-          buyInValue: 100,
-          rebuyValue: 100,
+          buyInValue: 50,   // agora 50
+          rebuyValue: 50,   // agora 50
           prize1: 50,
           prize2: 30,
           prize3: 20
@@ -631,6 +689,7 @@
 
     // DOM refs
     const headerTitleEl = document.getElementById("headerTitle");
+    const appVersionEl  = document.getElementById("appVersion");
     const resultsDateLabelEl = document.getElementById("resultsDateLabel");
 
     const buyInInput = document.getElementById("buyInValue");
@@ -663,6 +722,9 @@
       }
       if (resultsDateLabelEl) {
         resultsDateLabelEl.textContent = d ? d : "";
+      }
+      if (appVersionEl) {
+        appVersionEl.textContent = APP_VERSION;
       }
     }
 
@@ -752,9 +814,9 @@
           const icon = document.createElement("div");
           icon.className = "ranking-icon";
 
-          if (p.placement === "1") icon.textContent = "🥇";
-          else if (p.placement === "2") icon.textContent = "🥈";
-          else if (p.placement === "3") icon.textContent = "🥉";
+          if (p.placement === "1") icon.textContent = "1º";
+          else if (p.placement === "2") icon.textContent = "2º";
+          else if (p.placement === "3") icon.textContent = "3º";
           else icon.textContent = p.placement + "º";
 
           const nameSpan = document.createElement("span");
@@ -1099,9 +1161,9 @@
         rankingPlayers.forEach((p) => {
           const place = p.placement;
           let icon = "";
-          if (place === "1") icon = "🥇";
-          else if (place === "2") icon = "🥈";
-          else if (place === "3") icon = "🥉";
+          if (place === "1") icon = "1º";
+          else if (place === "2") icon = "2º";
+          else if (place === "3") icon = "3º";
           else icon = place + "º";
 
           const name = p.name || `Jogador ${p.index + 1}`;
@@ -1138,7 +1200,7 @@
       if (summaryPlayers.length === 0) {
         lines.push("Nenhum jogador com buy-in registrado.");
       } else {
-        summaryPlayers.forEach((p) => {
+        summaryPlayers.forEach((p, idx) => {
           const name = p.name || `Jogador ${p.index + 1}`;
           const totalBuyInValue = p.buyIns * buyInValue;
           const totalRebuyValue = p.rebuys * rebuyValue;
@@ -1164,6 +1226,8 @@
             `PRÊMIO: ${formatMoney(placePrize)} | ` +
             `Resultado: ${resultadoText}`
           );
+          // linha em branco entre jogadores
+          lines.push("");
         });
       }
 
@@ -1214,8 +1278,14 @@
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
 
+      // Pote total em negrito e azul
+      ctx.fillStyle = "#007aff";
+      ctx.font = "bold 18px -apple-system, system-ui, sans-serif";
       ctx.fillText(`Pote total: ${formatMoney(totalPot)}`, 40, y);
       y += 30;
+
+      ctx.fillStyle = "#111111";
+      ctx.font = "18px -apple-system, system-ui, sans-serif";
       ctx.fillText(
         `Buy-ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
         `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)})`,
@@ -1232,8 +1302,12 @@
         .filter(p => p.buyIns >= 1)
         .sort((a, b) => b.totalSpent - a.totalSpent);
 
+      // Colocações (bold + itálico)
+      ctx.font = "italic bold 18px -apple-system, system-ui, sans-serif";
+      ctx.fillStyle = "#111111";
       ctx.fillText("Colocações:", 40, y);
       y += 30;
+
       ctx.font = "16px -apple-system, system-ui, sans-serif";
 
       if (rankingPlayers.length === 0) {
@@ -1243,9 +1317,9 @@
         rankingPlayers.forEach((p) => {
           const place = p.placement;
           let icon = "";
-          if (place === "1") icon = "🥇";
-          else if (place === "2") icon = "🥈";
-          else if (place === "3") icon = "🥉";
+          if (place === "1") icon = "1º";
+          else if (place === "2") icon = "2º";
+          else if (place === "3") icon = "3º";
           else icon = place + "º";
 
           const name = p.name || `Jogador ${p.index + 1}`;
@@ -1258,6 +1332,7 @@
           const baseText =
             `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | Resultado: `;
           ctx.fillStyle = "#111111";
+          if (y >= height - 20) return;
           ctx.fillText(baseText, 40, y);
 
           let resultText;
@@ -1281,10 +1356,12 @@
       }
 
       y += 20;
-      ctx.font = "18px -apple-system, system-ui, sans-serif";
+      // Resultados detalhados (bold + itálico)
+      ctx.font = "italic bold 18px -apple-system, system-ui, sans-serif";
       ctx.fillStyle = "#111111";
       ctx.fillText("Resultados detalhados:", 40, y);
       y += 30;
+
       ctx.font = "16px -apple-system, system-ui, sans-serif";
 
       if (summaryPlayers.length === 0) {
@@ -1389,11 +1466,11 @@
     renderPlayers();
     recalc();
 
-    // PWA service worker
+    // PWA service worker (versionado)
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
-          .register("sw.js")
+          .register("sw.js?v=" + APP_VERSION)
           .catch((err) => console.error("SW registration failed", err));
       });
     }
