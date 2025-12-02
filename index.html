@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <title>Poker</title>
+  <title>Poker Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <!-- PWA manifest -->
@@ -332,7 +332,7 @@
 </head>
 <body>
   <header>
-    <h1>Poker</h1>
+    <h1>Poker Tracker</h1>
     <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">🌙</button>
   </header>
 
@@ -348,13 +348,6 @@
         <div>
           <label for="rebuyValue">Valor do rebuy (R$)</label>
           <input id="rebuyValue" type="number" min="0" step="0.01" inputmode="decimal" />
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:4px;">
-        <div>
-          <label for="tableName">Nome da mesa / evento</label>
-          <input id="tableName" type="text" placeholder="Ex: Poker Quinta, Mesa Miami..." />
         </div>
       </div>
 
@@ -418,6 +411,10 @@
 
       <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
 
+      <!-- Removemos a exibição detalhada de prêmios 1º/2º/3º no UI? Não, mantemos só se você quiser.
+           Pelo pedido, a remoção é para o RESUMO, não para a UI.
+           Se quiser tirar daqui também, é só apagar este bloco:
+
       <div class="summary-item">
         <span>1º lugar</span><strong id="prize1Amount">R$ 0,00</strong>
       </div>
@@ -427,10 +424,9 @@
       <div class="summary-item">
         <span>3º lugar</span><strong id="prize3Amount">R$ 0,00</strong>
       </div>
+      -->
 
-      <hr style="margin:12px 0;border:none;border-top:1px dashed #ddd;">
-
-      <div class="card-title" style="font-size:14px;margin-bottom:4px;">
+      <div class="card-title" style="font-size:14px;margin:12px 0 4px;">
         Resumo da rodada
       </div>
 
@@ -465,7 +461,7 @@
   </footer>
 
   <script>
-    const STORAGE_KEY = "poker_tracker_state_v3";
+    const STORAGE_KEY = "poker_tracker_state_v4";
     const THEME_KEY = "poker_tracker_theme";
 
     // Formatação de moeda BRL
@@ -504,7 +500,6 @@
           prize1: 50,
           prize2: 30,
           prize3: 20,
-          tableName: "Poker Night",
         },
         players: Array.from({ length: 10 }, (_, i) => ({
           id: i,
@@ -542,7 +537,6 @@
             prize1: parsed.settings?.prize1 ?? 50,
             prize2: parsed.settings?.prize2 ?? 30,
             prize3: parsed.settings?.prize3 ?? 20,
-            tableName: parsed.settings?.tableName ?? "Poker Night",
           },
           players,
         };
@@ -577,16 +571,12 @@
     const prize3Input = document.getElementById("prize3");
     const prizeSumWarning = document.getElementById("prizeSumWarning");
     const playersContainer = document.getElementById("playersContainer");
-    const tableNameInput = document.getElementById("tableName");
 
     const totalBuyInsEl = document.getElementById("totalBuyIns");
     const totalRebuysEl = document.getElementById("totalRebuys");
     const totalFromBuyInsEl = document.getElementById("totalFromBuyIns");
     const totalFromRebuysEl = document.getElementById("totalFromRebuys");
     const totalPotEl = document.getElementById("totalPot");
-    const prize1AmountEl = document.getElementById("prize1Amount");
-    const prize2AmountEl = document.getElementById("prize2Amount");
-    const prize3AmountEl = document.getElementById("prize3Amount");
 
     const summaryTextEl = document.getElementById("summaryText");
     const copySummaryBtn = document.getElementById("copySummary");
@@ -628,7 +618,6 @@
       prize1Input.value = state.settings.prize1;
       prize2Input.value = state.settings.prize2;
       prize3Input.value = state.settings.prize3;
-      tableNameInput.value = state.settings.tableName;
       updatePrizeSumWarning();
     }
 
@@ -929,20 +918,19 @@
           else if (p.position === 3) emoji = "🥉";
 
           const posLabel = `${p.position}º`;
-          return `${emoji} ${posLabel} — ${p.name} (${formatMoney(p.prize || 0)})`;
+          return `${emoji} ${posLabel} — ${p.name}`;
         });
     }
 
     function buildShortSummary(prize1Amount, prize2Amount, prize3Amount) {
       const { totalPot } = computeTotalsAndPrizes();
       const dateStr = formatDateBR(new Date());
-      const tableName = state.settings.tableName || "Poker Night";
 
       const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
       const rankingShort = rankingLines.slice(0, 3).join(" | ") || "sem vencedores definidos";
 
-      return `${tableName} – ${dateStr}
-Pote: ${formatMoney(totalPot)}
+      return `Poker - ${dateStr}
+Pote total: ${formatMoney(totalPot)}
 Ranking: ${rankingShort}`;
     }
 
@@ -958,21 +946,19 @@ Ranking: ${rankingShort}`;
         prize1Amount,
         prize2Amount,
         prize3Amount,
-        p1,
-        p2,
-        p3,
       } = computeTotalsAndPrizes();
 
       const playersLines = [];
       const today = new Date();
       const dateStr = formatDateBR(today);
-      const tableName = state.settings.tableName || "Poker Night";
 
       state.players.forEach((p, i) => {
         const name = p.name?.trim() || `Jogador ${i + 1}`;
         const buyIns = toNumber(p.buyIns);
         const rebuys = toNumber(p.rebuys);
-        if (buyIns === 0 && rebuys === 0 && !p.name) return;
+
+        // Só jogadores com 1 ou mais buy-ins entram no resumo
+        if (buyIns < 1) return;
 
         const spent = buyIns * buyInValue + rebuys * rebuyValue;
 
@@ -1002,18 +988,13 @@ Ranking: ${rankingShort}`;
 
       const lines = [];
 
-      lines.push(`🃏 ${tableName} – resumo da rodada`);
-      lines.push(`Data: ${dateStr}`);
+      // Primeira linha: Poker - DATA
+      lines.push(`Poker - ${dateStr}`);
       lines.push("");
       lines.push(`Buy-in: ${formatMoney(buyInValue)} | Rebuy: ${formatMoney(rebuyValue)}`);
       lines.push(`Total buy-ins: ${totalBuyIns} (${formatMoney(totalFromBuyIns)})`);
       lines.push(`Total rebuys: ${totalRebuys} (${formatMoney(totalFromRebuys)})`);
       lines.push(`Pote total: ${formatMoney(totalPot)}`);
-      lines.push("");
-      lines.push("Prêmios:");
-      lines.push(`1º lugar (${p1}%): ${formatMoney(prize1Amount)}`);
-      lines.push(`2º lugar (${p2}%): ${formatMoney(prize2Amount)}`);
-      lines.push(`3º lugar (${p3}%): ${formatMoney(prize3Amount)}`);
       lines.push("");
 
       const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
@@ -1026,11 +1007,7 @@ Ranking: ${rankingShort}`;
       if (playersLines.length) {
         lines.push("Jogadores:");
         lines.push(...playersLines);
-        lines.push("");
       }
-
-      lines.push("Resumo curto (WhatsApp):");
-      lines.push(buildShortSummary(prize1Amount, prize2Amount, prize3Amount));
 
       return lines.join("\n");
     }
@@ -1053,16 +1030,15 @@ Ranking: ${rankingShort}`;
       totalFromRebuysEl.textContent = formatMoney(totalFromRebuys);
       totalPotEl.textContent = formatMoney(totalPot);
 
-      prize1AmountEl.textContent = formatMoney(prize1Amount);
-      prize2AmountEl.textContent = formatMoney(prize2Amount);
-      prize3AmountEl.textContent = formatMoney(prize3Amount);
+      const fullSummary = buildSummary();
+      const shortSummary = buildShortSummary(prize1Amount, prize2Amount, prize3Amount);
 
-      const summary = buildSummary();
       if (summaryTextEl) {
-        summaryTextEl.value = summary;
+        summaryTextEl.value = fullSummary;
       }
       if (whatsSummaryLink) {
-        whatsSummaryLink.href = "https://wa.me/?text=" + encodeURIComponent(summary);
+        // WhatsApp recebe apenas o resumo curto (pote total + ranking, sem ganhos/perdas)
+        whatsSummaryLink.href = "https://wa.me/?text=" + encodeURIComponent(shortSummary);
       }
     }
 
@@ -1094,12 +1070,6 @@ Ranking: ${rankingShort}`;
     prize1Input.addEventListener("change", updatePrizeSetting);
     prize2Input.addEventListener("change", updatePrizeSetting);
     prize3Input.addEventListener("change", updatePrizeSetting);
-
-    tableNameInput.addEventListener("input", () => {
-      state.settings.tableName = tableNameInput.value;
-      saveState(state);
-      recalc();
-    });
 
     document.getElementById("recalcBtn").addEventListener("click", recalc);
 
@@ -1157,15 +1127,20 @@ Ranking: ${rankingShort}`;
         const cardW = canvas.width - margin * 2;
         const cardH = canvas.height - margin * 2 - 40;
 
-        ctx.fillStyle = "#1e1e20";
-        ctx.roundRect(cardX, cardY, cardW, cardH, 40);
-        ctx.fill();
+        if (ctx.roundRect) {
+          ctx.fillStyle = "#1e1e20";
+          ctx.roundRect(cardX, cardY, cardW, cardH, 40);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = "#1e1e20";
+          ctx.fillRect(cardX, cardY, cardW, cardH);
+        }
 
         // Título
         ctx.fillStyle = "#ffffff";
         ctx.font = "bold 48px -apple-system, system-ui, sans-serif";
-        const tableName = state.settings.tableName || "Poker Night";
-        const title = "Resumo – " + tableName;
+        const today = new Date();
+        const title = "Poker - " + formatDateBR(today);
         const titleWidth = ctx.measureText(title).width;
         ctx.fillText(title, canvas.width / 2 - titleWidth / 2, cardY + 70);
 
@@ -1204,7 +1179,6 @@ Ranking: ${rankingShort}`;
           if (y > cardY + cardH - 40) break;
         }
 
-        // Baixar imagem
         const dataUrl = canvas.toDataURL("image/png");
         const a = document.createElement("a");
         a.href = dataUrl;
