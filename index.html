@@ -392,23 +392,22 @@
 
     <!-- Totals & prizes -->
     <section class="card">
-      <div class="card-title">Totais & prêmios</div>
+      <div class="card-title">Valores:</div>
       <div class="summary-item">
         <span>Total de buy-ins</span><strong id="totalBuyIns">0</strong>
       </div>
       <div class="summary-item">
         <span>Total de rebuys</span><strong id="totalRebuys">0</strong>
       </div>
-      <div class="summary-item">
-        <span>Arrecadado em buy-ins</span><strong id="totalFromBuyIns">R$ 0,00</strong>
-      </div>
-      <div class="summary-item">
-        <span>Arrecadado em rebuys</span><strong id="totalFromRebuys">R$ 0,00</strong>
-      </div>
       <div class="total-pot">
         Pote total: <span id="totalPot">R$ 0,00</span>
       </div>
+      <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
 
+      <div id="rankingUI" style="font-size:14px; line-height:1.45;"></div>
+
+
+      
       <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
 
       <!-- Removemos a exibição detalhada de prêmios 1º/2º/3º no UI? Não, mantemos só se você quiser.
@@ -1040,6 +1039,21 @@ Ranking: ${rankingShort}`;
       totalPotEl.textContent = formatMoney(totalPot);
 
       const fullSummary = buildSummary();
+
+      // Atualiza ranking visual na seção Totais & Prêmios
+      const rankingUI = document.getElementById("rankingUI");
+      const rankingLines = buildRanking(state.players, prize1Amount, prize2Amount, prize3Amount);
+
+      if (rankingLines.length) {
+        rankingUI.innerHTML = `
+          <strong>Ranking final:</strong><br>
+          ${rankingLines.join("<br>")}
+        `;
+      } else {
+        rankingUI.innerHTML = "";
+      }
+
+      
       const shortSummary = buildShortSummary(prize1Amount, prize2Amount, prize3Amount);
 
       if (summaryTextEl) {
