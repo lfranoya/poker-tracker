@@ -50,17 +50,6 @@
       margin: 0;
     }
 
-    .title-block {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .today-label {
-      font-size: 11px;
-      color: #666;
-      margin-top: 2px;
-    }
-
     .theme-toggle {
       border-radius: 999px;
       border: 1px solid #d0d0d4;
@@ -92,6 +81,15 @@
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 8px;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .results-date {
+      font-size: 13px;
+      font-weight: 400;
+      color: #666;
     }
 
     label {
@@ -132,16 +130,24 @@
 
     .player-head {
       display: grid;
-      grid-template-columns: 1.3fr 1fr 1fr 1fr;
+      grid-template-columns: 1.3fr 0.9fr 0.9fr 1.1fr 0.7fr;
       gap: 6px;
       font-size: 11px;
       font-weight: 600;
       margin-bottom: 4px;
     }
 
+    .player-head div {
+      text-align: center;
+    }
+
+    .player-head div:first-child {
+      text-align: left;
+    }
+
     .player-row {
       display: grid;
-      grid-template-columns: 1.3fr 1fr 1fr 1fr;
+      grid-template-columns: 1.3fr 0.9fr 0.9fr 1.1fr 0.7fr;
       gap: 6px;
       align-items: center;
       margin-bottom: 6px;
@@ -196,6 +202,11 @@
       text-align: right;
       padding-right: 4px;
       min-width: 80px;
+    }
+
+    .position-input {
+      width: 100%;
+      text-align: center;
     }
 
     .summary-item {
@@ -324,18 +335,18 @@
       border-color: #30d158;
     }
 
-    body.dark .today-label {
+    body.dark .results-date {
       color: #aaa;
     }
 
     @media (max-width: 480px) {
       .player-head,
       .player-row {
-        grid-template-columns: 1.3fr 1fr 1fr 1.2fr;
+        grid-template-columns: 1.3fr 0.9fr 0.9fr 1.1fr 0.7fr;
       }
     }
 
-    /* Ranking / resumo */
+    /* Listas de ranking / resumo */
     .ranking-list {
       margin-top: 8px;
       font-size: 14px;
@@ -370,10 +381,7 @@
 </head>
 <body>
   <header>
-    <div class="title-block">
-      <h1>Poker Tracker</h1>
-      <div id="todayLabel" class="today-label"></div>
-    </div>
+    <h1 id="headerTitle">Poker</h1>
     <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">🌙</button>
   </header>
 
@@ -423,6 +431,7 @@
         <div>Buy-ins</div>
         <div>Rebuys</div>
         <div>Total gasto</div>
+        <div>Posição</div>
       </div>
       <div id="playersContainer"></div>
       <div class="small-note">
@@ -432,7 +441,10 @@
 
     <!-- RESULTADOS -->
     <section class="card">
-      <div class="card-title">RESULTADOS</div>
+      <div class="card-title">
+        <span>RESULTADOS</span>
+        <span id="resultsDateLabel" class="results-date"></span>
+      </div>
 
       <div class="summary-item">
         <span>Total de buy-ins</span><strong id="totalBuyIns">0</strong>
@@ -461,12 +473,17 @@
       <button id="pngCardBtn" class="btn btn-secondary">Gerar card em PNG</button>
 
       <div class="small-note" style="margin-top:10px;font-weight:600;">
-        Resumo do dia – ranking (apenas quem tem mais de 1 buy-in):
+        Colocações:
       </div>
       <div id="rankingList" class="ranking-list"></div>
 
+      <div class="small-note" style="margin-top:10px;font-weight:600;">
+        Jogadores com 1 ou mais buy-ins:
+      </div>
+      <div id="playersSummaryList" class="ranking-list"></div>
+
       <!-- Canvas escondido para gerar o card PNG -->
-      <canvas id="summaryCanvas" width="900" height="600"></canvas>
+      <canvas id="summaryCanvas" width="900" height="700"></canvas>
     </section>
   </main>
 
@@ -475,7 +492,7 @@
   </footer>
 
   <script>
-    const STORAGE_KEY = "poker_tracker_state_v2";
+    const STORAGE_KEY = "poker_tracker_state_v3";
     const THEME_KEY = "poker_tracker_theme";
 
     // Formatação R$
@@ -518,7 +535,8 @@
           id: i,
           name: "",
           buyIns: 0,
-          rebuys: 0
+          rebuys: 0,
+          placement: 0
         }))
       };
     }
@@ -528,8 +546,17 @@
         const data = localStorage.getItem(STORAGE_KEY);
         if (!data) return defaultState();
         const parsed = JSON.parse(data);
+
         if (!parsed.players || parsed.players.length !== 10) {
           parsed.players = defaultState().players;
+        } else {
+          parsed.players = parsed.players.map((p, i) => ({
+            id: i,
+            name: p.name || "",
+            buyIns: toNumber(p.buyIns, 0),
+            rebuys: toNumber(p.rebuys, 0),
+            placement: toNumber(p.placement, 0)
+          }));
         }
         return parsed;
       } catch (e) {
@@ -548,7 +575,19 @@
 
     let state = loadState();
 
+    // Data de hoje
+    function getTodayString() {
+      try {
+        return new Date().toLocaleDateString("pt-BR");
+      } catch (e) {
+        return "";
+      }
+    }
+
     // DOM refs
+    const headerTitleEl = document.getElementById("headerTitle");
+    const resultsDateLabelEl = document.getElementById("resultsDateLabel");
+
     const buyInInput = document.getElementById("buyInValue");
     const rebuyInput = document.getElementById("rebuyValue");
     const prize1Input = document.getElementById("prize1");
@@ -563,27 +602,23 @@
     const prize1AmountEl = document.getElementById("prize1Amount");
     const prize2AmountEl = document.getElementById("prize2Amount");
     const prize3AmountEl = document.getElementById("prize3Amount");
+
     const rankingListEl = document.getElementById("rankingList");
+    const playersSummaryListEl = document.getElementById("playersSummaryList");
 
     const themeToggleBtn = document.getElementById("themeToggle");
     const whatsappShareBtn = document.getElementById("whatsappShareBtn");
     const pngCardBtn = document.getElementById("pngCardBtn");
     const summaryCanvas = document.getElementById("summaryCanvas");
-    const todayLabelEl = document.getElementById("todayLabel");
 
-    // Data de hoje
-    function getTodayString() {
-      try {
-        return new Date().toLocaleDateString("pt-BR");
-      } catch (e) {
-        return "";
-      }
-    }
-
-    function updateTodayLabel() {
-      if (!todayLabelEl) return;
+    function updateDateLabels() {
       const d = getTodayString();
-      todayLabelEl.textContent = d ? "Hoje: " + d : "";
+      if (headerTitleEl) {
+        headerTitleEl.textContent = d ? "Poker - " + d : "Poker";
+      }
+      if (resultsDateLabelEl) {
+        resultsDateLabelEl.textContent = d ? d : "";
+      }
     }
 
     // Tema
@@ -612,7 +647,7 @@
 
     themeToggleBtn.addEventListener("click", toggleTheme);
     loadTheme();
-    updateTodayLabel();
+    updateDateLabels();
 
     function renderSettings() {
       buyInInput.value = state.settings.buyInValue;
@@ -646,48 +681,90 @@
       });
     }
 
-    function renderRanking(playersWithTotalsSorted) {
+    function renderRankingAndSummary(playersWithTotalsSorted) {
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+
       rankingListEl.innerHTML = "";
+      playersSummaryListEl.innerHTML = "";
 
-      // filtro: apenas jogadores com mais de 1 buy-in
-      const filtered = playersWithTotalsSorted.filter(p => p.buyIns > 1);
+      // Ranking por colocação (somente jogadores com posição > 0 e ao menos 1 buy-in)
+      const rankingPlayers = playersWithTotalsSorted
+        .filter(p => toNumber(p.placement, 0) > 0 && p.buyIns > 0)
+        .sort((a, b) => toNumber(a.placement, 0) - toNumber(b.placement, 0));
 
-      if (filtered.length === 0) {
+      if (rankingPlayers.length === 0) {
         rankingListEl.innerHTML =
-          '<div class="small-note">Ainda não há jogadores com mais de 1 buy-in.</div>';
-        return;
+          '<div class="small-note">Ainda não há colocações definidas.</div>';
+      } else {
+        rankingPlayers.forEach((p) => {
+          const div = document.createElement("div");
+          div.className = "ranking-item";
+
+          const left = document.createElement("div");
+          left.className = "ranking-left";
+
+          const icon = document.createElement("div");
+          icon.className = "ranking-icon";
+
+          const place = toNumber(p.placement, 0);
+          if (place === 1) icon.textContent = "🥇";
+          else if (place === 2) icon.textContent = "🥈";
+          else if (place === 3) icon.textContent = "🥉";
+          else icon.textContent = place + "º";
+
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "ranking-name";
+          nameSpan.textContent = p.name || ("Jogador " + (p.index + 1));
+
+          left.appendChild(icon);
+          left.appendChild(nameSpan);
+
+          const right = document.createElement("div");
+          right.textContent = formatMoney(p.totalSpent);
+
+          div.appendChild(left);
+          div.appendChild(right);
+          rankingListEl.appendChild(div);
+        });
       }
 
-      filtered.forEach((p, idx) => {
-        const div = document.createElement("div");
-        div.className = "ranking-item";
+      // Lista de todos os jogadores com 1+ buy-in
+      const summaryPlayers = playersWithTotalsSorted
+        .filter(p => p.buyIns >= 1)
+        .sort((a, b) => b.totalSpent - a.totalSpent);
 
-        const left = document.createElement("div");
-        left.className = "ranking-left";
+      if (summaryPlayers.length === 0) {
+        playersSummaryListEl.innerHTML =
+          '<div class="small-note">Nenhum jogador com buy-in registrado.</div>';
+      } else {
+        summaryPlayers.forEach((p) => {
+          const div = document.createElement("div");
+          div.className = "ranking-item";
 
-        const icon = document.createElement("div");
-        icon.className = "ranking-icon";
+          const left = document.createElement("div");
+          left.className = "ranking-left";
 
-        if (idx === 0) icon.textContent = "🥇";
-        else if (idx === 1) icon.textContent = "🥈";
-        else if (idx === 2) icon.textContent = "🥉";
-        else icon.textContent = (idx + 1) + "º";
+          const nameSpan = document.createElement("span");
+          nameSpan.className = "ranking-name";
+          const name = p.name || ("Jogador " + (p.index + 1));
+          nameSpan.textContent = name;
 
-        const nameSpan = document.createElement("span");
-        nameSpan.className = "ranking-name";
-        nameSpan.textContent = p.name || ("Jogador " + (p.index + 1));
+          left.appendChild(nameSpan);
 
-        left.appendChild(icon);
-        left.appendChild(nameSpan);
+          const right = document.createElement("div");
+          const totalBuyInValue = p.buyIns * buyInValue;
+          const totalRebuyValue = p.rebuys * rebuyValue;
+          right.textContent =
+            `BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
+            `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
+            `TOTAL: ${formatMoney(p.totalSpent)}`;
 
-        const right = document.createElement("div");
-        right.textContent =
-          `${p.buyIns} BI · ${p.rebuys} RB · ${formatMoney(p.totalSpent)}`;
-
-        div.appendChild(left);
-        div.appendChild(right);
-        rankingListEl.appendChild(div);
-      });
+          div.appendChild(left);
+          div.appendChild(right);
+          playersSummaryListEl.appendChild(div);
+        });
+      }
     }
 
     function renderPlayers() {
@@ -723,7 +800,7 @@
         nameInput.addEventListener("input", () => {
           state.players[p.index].name = nameInput.value;
           saveState(state);
-          renderRanking(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
+          renderRankingAndSummary(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
         });
         nameDiv.appendChild(nameInput);
 
@@ -778,10 +855,30 @@
         spentLabel.textContent = formatMoney(p.totalSpent);
         spentDiv.appendChild(spentLabel);
 
+        // Posição
+        const posDiv = document.createElement("div");
+        const posInput = document.createElement("input");
+        posInput.type = "number";
+        posInput.min = "0";
+        posInput.step = "1";
+        posInput.value = p.placement || 0;
+        posInput.className = "position-input";
+        posInput.addEventListener("change", () => {
+          const idx = p.index;
+          state.players[idx].placement = Math.max(
+            0,
+            Math.floor(toNumber(posInput.value, 0))
+          );
+          saveState(state);
+          renderRankingAndSummary(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
+        });
+        posDiv.appendChild(posInput);
+
         row.appendChild(nameDiv);
         row.appendChild(buyDiv);
         row.appendChild(rebuyDiv);
         row.appendChild(spentDiv);
+        row.appendChild(posDiv);
         playersContainer.appendChild(row);
 
         function updatePlayer(newBuyIns, newRebuys) {
@@ -820,8 +917,8 @@
         });
       });
 
-      // Atualiza ranking com mesma ordem
-      renderRanking(playersWithTotals);
+      // Atualiza ranking e resumo com mesma ordem base
+      renderRankingAndSummary(playersWithTotals);
     }
 
     function recalc() {
@@ -874,7 +971,14 @@
 
       const totalPot = totalBuyIns * buyInValue + totalRebuys * rebuyValue;
       const playersSorted = buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent);
-      const filtered = playersSorted.filter(p => p.buyIns > 1);
+
+      const rankingPlayers = playersSorted
+        .filter(p => toNumber(p.placement, 0) > 0 && p.buyIns > 0)
+        .sort((a, b) => toNumber(a.placement, 0) - toNumber(b.placement, 0));
+
+      const summaryPlayers = playersSorted
+        .filter(p => p.buyIns >= 1)
+        .sort((a, b) => b.totalSpent - a.totalSpent);
 
       const today = getTodayString();
 
@@ -888,19 +992,37 @@
       lines.push(`Buy-ins: ${totalBuyIns} · Rebuys: ${totalRebuys}`);
       lines.push("");
 
-      if (filtered.length === 0) {
-        lines.push("Nenhum jogador com mais de 1 buy-in.");
-      } else {
-        filtered.forEach((p, idx) => {
+      if (rankingPlayers.length > 0) {
+        lines.push("Colocações:");
+        rankingPlayers.forEach((p) => {
+          const place = toNumber(p.placement, 0);
           let icon = "";
-          if (idx === 0) icon = "🥇";
-          else if (idx === 1) icon = "🥈";
-          else if (idx === 2) icon = "🥉";
-          else icon = (idx + 1) + "º";
+          if (place === 1) icon = "🥇";
+          else if (place === 2) icon = "🥈";
+          else if (place === 3) icon = "🥉";
+          else icon = place + "º";
 
           const name = p.name || `Jogador ${p.index + 1}`;
+          lines.push(`${icon} ${name} – ${formatMoney(p.totalSpent)}`);
+        });
+        lines.push("");
+      } else {
+        lines.push("Sem colocações definidas.");
+        lines.push("");
+      }
+
+      lines.push("Jogadores com 1 ou mais buy-ins:");
+      if (summaryPlayers.length === 0) {
+        lines.push("Nenhum jogador com buy-in registrado.");
+      } else {
+        summaryPlayers.forEach((p) => {
+          const name = p.name || `Jogador ${p.index + 1}`;
+          const totalBuyInValue = p.buyIns * buyInValue;
+          const totalRebuyValue = p.rebuys * rebuyValue;
           lines.push(
-            `${icon} ${name} – ${p.buyIns} BI, ${p.rebuys} RB – ${formatMoney(p.totalSpent)}`
+            `${name} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
+            `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
+            `TOTAL: ${formatMoney(p.totalSpent)}`
           );
         });
       }
@@ -911,12 +1033,10 @@
     whatsappShareBtn.addEventListener("click", () => {
       const text = buildWhatsappSummary();
 
-      // Tenta copiar para a área de transferência (se suportado)
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).catch(() => {});
       }
 
-      // Abre WhatsApp com o texto
       const url = "https://wa.me/?text=" + encodeURIComponent(text);
       window.open(url, "_blank");
     });
@@ -927,7 +1047,6 @@
       const width = summaryCanvas.width;
       const height = summaryCanvas.height;
 
-      // Fundo
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, width, height);
 
@@ -961,26 +1080,58 @@
       y += 40;
 
       const playersSorted = buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent);
-      const filtered = playersSorted.filter(p => p.buyIns > 1);
+      const rankingPlayers = playersSorted
+        .filter(p => toNumber(p.placement, 0) > 0 && p.buyIns > 0)
+        .sort((a, b) => toNumber(a.placement, 0) - toNumber(b.placement, 0));
 
-      ctx.fillText("Ranking (mais de 1 buy-in):", 40, y);
+      const summaryPlayers = playersSorted
+        .filter(p => p.buyIns >= 1)
+        .sort((a, b) => b.totalSpent - a.totalSpent);
+
+      ctx.fillText("Colocações:", 40, y);
       y += 30;
       ctx.font = "16px -apple-system, system-ui, sans-serif";
 
-      if (filtered.length === 0) {
-        ctx.fillText("Nenhum jogador com mais de 1 buy-in.", 40, y);
+      if (rankingPlayers.length === 0) {
+        ctx.fillText("Sem colocações definidas.", 40, y);
+        y += 30;
       } else {
-        filtered.slice(0, 10).forEach((p, idx) => {
+        rankingPlayers.forEach((p) => {
+          const place = toNumber(p.placement, 0);
           let icon = "";
-          if (idx === 0) icon = "🥇";
-          else if (idx === 1) icon = "🥈";
-          else if (idx === 2) icon = "🥉";
-          else icon = (idx + 1) + "º";
+          if (place === 1) icon = "🥇";
+          else if (place === 2) icon = "🥈";
+          else if (place === 3) icon = "🥉";
+          else icon = place + "º";
 
           const name = p.name || `Jogador ${p.index + 1}`;
-          const line = `${icon} ${name} – ${p.buyIns} BI, ${p.rebuys} RB – ${formatMoney(p.totalSpent)}`;
+          const line = `${icon} ${name} – ${formatMoney(p.totalSpent)}`;
           ctx.fillText(line, 40, y);
-          y += 26;
+          y += 24;
+        });
+      }
+
+      y += 20;
+      ctx.font = "18px -apple-system, system-ui, sans-serif";
+      ctx.fillText("Jogadores com 1 ou mais buy-ins:", 40, y);
+      y += 30;
+      ctx.font = "16px -apple-system, system-ui, sans-serif";
+
+      if (summaryPlayers.length === 0) {
+        ctx.fillText("Nenhum jogador com buy-in registrado.", 40, y);
+      } else {
+        summaryPlayers.forEach((p) => {
+          const name = p.name || `Jogador ${p.index + 1}`;
+          const totalBuyInValue = p.buyIns * buyInValue;
+          const totalRebuyValue = p.rebuys * rebuyValue;
+          const line =
+            `${name} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
+            `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
+            `TOTAL: ${formatMoney(p.totalSpent)}`;
+          if (y < height - 20) {
+            ctx.fillText(line, 40, y);
+            y += 22;
+          }
         });
       }
     }
