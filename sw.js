@@ -1,6 +1,7 @@
-// Mude esse número SEMPRE que fizer uma mudança grande no app
-const CACHE_VERSION = "v12"; 
-const CACHE_NAME = "poker-tracker-cache-" + CACHE_VERSION;
+// A versão vem da query string: sw.js?v=v1.0
+// Se por algum motivo não vier, cai no fallback "v1.0"
+const VERSION = new URL(self.location).searchParams.get("v") || "v1.0";
+const CACHE_NAME = "poker-tracker-cache-" + VERSION;
 
 const CORE_ASSETS = [
   "./",
@@ -13,6 +14,7 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
   );
+  // força esse SW a ir para o estado "waiting" imediatamente
   self.skipWaiting();
 });
 
@@ -21,12 +23,12 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key !== CACHE_NAME)
+          // só mexe nos caches deste app
+          .filter((key) => key.startsWith("poker-tracker-cache-") && key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       )
-    )
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 // Regra:
@@ -47,6 +49,7 @@ self.addEventListener("fetch", (event) => {
         .then((networkResp) => {
           const copy = networkResp.clone();
           caches.open(CACHE_NAME).then((cache) => {
+            // garante que o index.html da nova versão está no cache correto
             cache.put("./index.html", copy);
           });
           return networkResp;
