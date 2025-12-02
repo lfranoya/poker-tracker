@@ -50,6 +50,17 @@
       margin: 0;
     }
 
+    .title-block {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .today-label {
+      font-size: 11px;
+      color: #666;
+      margin-top: 2px;
+    }
+
     .theme-toggle {
       border-radius: 999px;
       border: 1px solid #d0d0d4;
@@ -220,6 +231,13 @@
       margin-top: 8px;
     }
 
+    .btn-secondary {
+      background: #f2f2f7;
+      color: #111;
+      width: 100%;
+      margin-top: 6px;
+    }
+
     .btn-danger {
       background: #ff3b30;
       color: white;
@@ -279,6 +297,11 @@
       background: #0a84ff;
     }
 
+    body.dark .btn-secondary {
+      background: #2c2c2e;
+      color: #f5f5f5;
+    }
+
     body.dark .btn-danger {
       background: #ff453a;
     }
@@ -301,17 +324,56 @@
       border-color: #30d158;
     }
 
+    body.dark .today-label {
+      color: #aaa;
+    }
+
     @media (max-width: 480px) {
       .player-head,
       .player-row {
         grid-template-columns: 1.3fr 1fr 1fr 1.2fr;
       }
     }
+
+    /* Ranking / resumo */
+    .ranking-list {
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    .ranking-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 0;
+    }
+    .ranking-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ranking-icon {
+      width: 22px;
+      text-align: center;
+    }
+    .ranking-name {
+      max-width: 160px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Canvas (card PNG) */
+    #summaryCanvas {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>Poker Tracker</h1>
+    <div class="title-block">
+      <h1>Poker Tracker</h1>
+      <div id="todayLabel" class="today-label"></div>
+    </div>
     <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">🌙</button>
   </header>
 
@@ -355,7 +417,7 @@
 
     <!-- Jogadores -->
     <section class="card">
-      <div class="card-title">Jogadores (até 10)</div>
+      <div class="card-title">Jogadores</div>
       <div class="player-head">
         <div>Jogador</div>
         <div>Buy-ins</div>
@@ -364,24 +426,19 @@
       </div>
       <div id="playersContainer"></div>
       <div class="small-note">
-        Os jogadores são ordenados pelo total gasto (do maior para o menor).
+        A lista acima já está ordenada pelo total gasto (do maior para o menor).
       </div>
     </section>
 
-    <!-- Totais & prêmios -->
+    <!-- RESULTADOS -->
     <section class="card">
-      <div class="card-title">Totais & prêmios</div>
+      <div class="card-title">RESULTADOS</div>
+
       <div class="summary-item">
         <span>Total de buy-ins</span><strong id="totalBuyIns">0</strong>
       </div>
       <div class="summary-item">
         <span>Total de rebuys</span><strong id="totalRebuys">0</strong>
-      </div>
-      <div class="summary-item">
-        <span>Arrecadado em buy-ins</span><strong id="totalFromBuyIns">R$ 0,00</strong>
-      </div>
-      <div class="summary-item">
-        <span>Arrecadado em rebuys</span><strong id="totalFromRebuys">R$ 0,00</strong>
       </div>
       <div class="total-pot">
         Pote total: <span id="totalPot">R$ 0,00</span>
@@ -400,7 +457,16 @@
       </div>
 
       <button id="recalcBtn" class="btn btn-primary">Recalcular</button>
-      <div class="small-note">Recalcula tudo; mas a maioria das mudanças já atualiza automaticamente.</div>
+      <button id="whatsappShareBtn" class="btn btn-secondary">Enviar resumo no WhatsApp</button>
+      <button id="pngCardBtn" class="btn btn-secondary">Gerar card em PNG</button>
+
+      <div class="small-note" style="margin-top:10px;font-weight:600;">
+        Resumo do dia – ranking (apenas quem tem mais de 1 buy-in):
+      </div>
+      <div id="rankingList" class="ranking-list"></div>
+
+      <!-- Canvas escondido para gerar o card PNG -->
+      <canvas id="summaryCanvas" width="900" height="600"></canvas>
     </section>
   </main>
 
@@ -418,13 +484,13 @@
       moneyFormatter = new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 2
       });
     } catch (e) {
       moneyFormatter = {
         format(v) {
           return "R$ " + Number(v).toFixed(2).replace(".", ",");
-        },
+        }
       };
     }
 
@@ -446,14 +512,14 @@
           rebuyValue: 100,
           prize1: 50,
           prize2: 30,
-          prize3: 20,
+          prize3: 20
         },
         players: Array.from({ length: 10 }, (_, i) => ({
           id: i,
           name: "",
           buyIns: 0,
-          rebuys: 0,
-        })),
+          rebuys: 0
+        }))
       };
     }
 
@@ -493,13 +559,32 @@
 
     const totalBuyInsEl = document.getElementById("totalBuyIns");
     const totalRebuysEl = document.getElementById("totalRebuys");
-    const totalFromBuyInsEl = document.getElementById("totalFromBuyIns");
-    const totalFromRebuysEl = document.getElementById("totalFromRebuys");
     const totalPotEl = document.getElementById("totalPot");
     const prize1AmountEl = document.getElementById("prize1Amount");
     const prize2AmountEl = document.getElementById("prize2Amount");
     const prize3AmountEl = document.getElementById("prize3Amount");
+    const rankingListEl = document.getElementById("rankingList");
+
     const themeToggleBtn = document.getElementById("themeToggle");
+    const whatsappShareBtn = document.getElementById("whatsappShareBtn");
+    const pngCardBtn = document.getElementById("pngCardBtn");
+    const summaryCanvas = document.getElementById("summaryCanvas");
+    const todayLabelEl = document.getElementById("todayLabel");
+
+    // Data de hoje
+    function getTodayString() {
+      try {
+        return new Date().toLocaleDateString("pt-BR");
+      } catch (e) {
+        return "";
+      }
+    }
+
+    function updateTodayLabel() {
+      if (!todayLabelEl) return;
+      const d = getTodayString();
+      todayLabelEl.textContent = d ? "Hoje: " + d : "";
+    }
 
     // Tema
     function applyTheme(theme) {
@@ -527,6 +612,7 @@
 
     themeToggleBtn.addEventListener("click", toggleTheme);
     loadTheme();
+    updateTodayLabel();
 
     function renderSettings() {
       buyInInput.value = state.settings.buyInValue;
@@ -550,27 +636,74 @@
       }
     }
 
-    function renderPlayers() {
-      playersContainer.innerHTML = "";
-
+    function buildPlayersWithTotals() {
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
 
-      const playersWithIndex = state.players.map((p, index) => {
+      return state.players.map((p, index) => {
         const totalSpent = p.buyIns * buyInValue + p.rebuys * rebuyValue;
         return { ...p, index, totalSpent };
       });
+    }
 
-      const totals = playersWithIndex.map((p) => p.totalSpent);
+    function renderRanking(playersWithTotalsSorted) {
+      rankingListEl.innerHTML = "";
+
+      // filtro: apenas jogadores com mais de 1 buy-in
+      const filtered = playersWithTotalsSorted.filter(p => p.buyIns > 1);
+
+      if (filtered.length === 0) {
+        rankingListEl.innerHTML =
+          '<div class="small-note">Ainda não há jogadores com mais de 1 buy-in.</div>';
+        return;
+      }
+
+      filtered.forEach((p, idx) => {
+        const div = document.createElement("div");
+        div.className = "ranking-item";
+
+        const left = document.createElement("div");
+        left.className = "ranking-left";
+
+        const icon = document.createElement("div");
+        icon.className = "ranking-icon";
+
+        if (idx === 0) icon.textContent = "🥇";
+        else if (idx === 1) icon.textContent = "🥈";
+        else if (idx === 2) icon.textContent = "🥉";
+        else icon.textContent = (idx + 1) + "º";
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "ranking-name";
+        nameSpan.textContent = p.name || ("Jogador " + (p.index + 1));
+
+        left.appendChild(icon);
+        left.appendChild(nameSpan);
+
+        const right = document.createElement("div");
+        right.textContent =
+          `${p.buyIns} BI · ${p.rebuys} RB · ${formatMoney(p.totalSpent)}`;
+
+        div.appendChild(left);
+        div.appendChild(right);
+        rankingListEl.appendChild(div);
+      });
+    }
+
+    function renderPlayers() {
+      playersContainer.innerHTML = "";
+
+      const playersWithTotals = buildPlayersWithTotals();
+      const totals = playersWithTotals.map((p) => p.totalSpent);
       const maxSpent = Math.max(...totals, 0);
       const positiveTotals = totals.filter((v) => v > 0);
       const minSpent =
         positiveTotals.length > 0 ? Math.min(...positiveTotals) : 0;
 
       // Ordena do maior gasto para o menor
-      playersWithIndex.sort((a, b) => b.totalSpent - a.totalSpent);
+      playersWithTotals.sort((a, b) => b.totalSpent - a.totalSpent);
 
-      playersWithIndex.forEach((p) => {
+      playersWithTotals.forEach((p) => {
         const row = document.createElement("div");
         row.className = "player-row";
 
@@ -590,6 +723,7 @@
         nameInput.addEventListener("input", () => {
           state.players[p.index].name = nameInput.value;
           saveState(state);
+          renderRanking(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
         });
         nameDiv.appendChild(nameInput);
 
@@ -650,7 +784,6 @@
         row.appendChild(spentDiv);
         playersContainer.appendChild(row);
 
-        // Funções de update
         function updatePlayer(newBuyIns, newRebuys) {
           const idx = p.index;
           state.players[idx].buyIns = Math.max(
@@ -686,6 +819,9 @@
           updatePlayer(p.buyIns, rebuyInput.value);
         });
       });
+
+      // Atualiza ranking com mesma ordem
+      renderRanking(playersWithTotals);
     }
 
     function recalc() {
@@ -705,8 +841,6 @@
 
       totalBuyInsEl.textContent = totalBuyIns;
       totalRebuysEl.textContent = totalRebuys;
-      totalFromBuyInsEl.textContent = formatMoney(totalFromBuyIns);
-      totalFromRebuysEl.textContent = formatMoney(totalFromRebuys);
       totalPotEl.textContent = formatMoney(totalPot);
 
       const p1 = toNumber(state.settings.prize1);
@@ -725,6 +859,143 @@
       prize2AmountEl.textContent = formatMoney(prize2Amount);
       prize3AmountEl.textContent = formatMoney(prize3Amount);
     }
+
+    // Resumo para WhatsApp
+    function buildWhatsappSummary() {
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+
+      let totalBuyIns = 0;
+      let totalRebuys = 0;
+      state.players.forEach((p) => {
+        totalBuyIns += toNumber(p.buyIns);
+        totalRebuys += toNumber(p.rebuys);
+      });
+
+      const totalPot = totalBuyIns * buyInValue + totalRebuys * rebuyValue;
+      const playersSorted = buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent);
+      const filtered = playersSorted.filter(p => p.buyIns > 1);
+
+      const today = getTodayString();
+
+      let lines = [];
+      if (today) {
+        lines.push("Resumo da rodada de poker - " + today);
+      } else {
+        lines.push("Resumo da rodada de poker");
+      }
+      lines.push(`Pote total: ${formatMoney(totalPot)}`);
+      lines.push(`Buy-ins: ${totalBuyIns} · Rebuys: ${totalRebuys}`);
+      lines.push("");
+
+      if (filtered.length === 0) {
+        lines.push("Nenhum jogador com mais de 1 buy-in.");
+      } else {
+        filtered.forEach((p, idx) => {
+          let icon = "";
+          if (idx === 0) icon = "🥇";
+          else if (idx === 1) icon = "🥈";
+          else if (idx === 2) icon = "🥉";
+          else icon = (idx + 1) + "º";
+
+          const name = p.name || `Jogador ${p.index + 1}`;
+          lines.push(
+            `${icon} ${name} – ${p.buyIns} BI, ${p.rebuys} RB – ${formatMoney(p.totalSpent)}`
+          );
+        });
+      }
+
+      return lines.join("\n");
+    }
+
+    whatsappShareBtn.addEventListener("click", () => {
+      const text = buildWhatsappSummary();
+
+      // Tenta copiar para a área de transferência (se suportado)
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).catch(() => {});
+      }
+
+      // Abre WhatsApp com o texto
+      const url = "https://wa.me/?text=" + encodeURIComponent(text);
+      window.open(url, "_blank");
+    });
+
+    // Card em PNG
+    function drawSummaryCard() {
+      const ctx = summaryCanvas.getContext("2d");
+      const width = summaryCanvas.width;
+      const height = summaryCanvas.height;
+
+      // Fundo
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = "#111111";
+      ctx.font = "28px -apple-system, system-ui, sans-serif";
+      ctx.fillText("Resumo da rodada de poker", 40, 60);
+
+      const today = getTodayString();
+      let y = 100;
+      ctx.font = "18px -apple-system, system-ui, sans-serif";
+      if (today) {
+        ctx.fillText(today, 40, y);
+        y += 30;
+      }
+
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+
+      let totalBuyIns = 0;
+      let totalRebuys = 0;
+      state.players.forEach((p) => {
+        totalBuyIns += toNumber(p.buyIns);
+        totalRebuys += toNumber(p.rebuys);
+      });
+
+      const totalPot = totalBuyIns * buyInValue + totalRebuys * rebuyValue;
+
+      ctx.fillText(`Pote total: ${formatMoney(totalPot)}`, 40, y);
+      y += 30;
+      ctx.fillText(`Buy-ins: ${totalBuyIns} · Rebuys: ${totalRebuys}`, 40, y);
+      y += 40;
+
+      const playersSorted = buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent);
+      const filtered = playersSorted.filter(p => p.buyIns > 1);
+
+      ctx.fillText("Ranking (mais de 1 buy-in):", 40, y);
+      y += 30;
+      ctx.font = "16px -apple-system, system-ui, sans-serif";
+
+      if (filtered.length === 0) {
+        ctx.fillText("Nenhum jogador com mais de 1 buy-in.", 40, y);
+      } else {
+        filtered.slice(0, 10).forEach((p, idx) => {
+          let icon = "";
+          if (idx === 0) icon = "🥇";
+          else if (idx === 1) icon = "🥈";
+          else if (idx === 2) icon = "🥉";
+          else icon = (idx + 1) + "º";
+
+          const name = p.name || `Jogador ${p.index + 1}`;
+          const line = `${icon} ${name} – ${p.buyIns} BI, ${p.rebuys} RB – ${formatMoney(p.totalSpent)}`;
+          ctx.fillText(line, 40, y);
+          y += 26;
+        });
+      }
+    }
+
+    pngCardBtn.addEventListener("click", () => {
+      drawSummaryCard();
+      const dataUrl = summaryCanvas.toDataURL("image/png");
+
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "poker_resumo.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
 
     // Listeners de settings
     buyInInput.addEventListener("change", () => {
@@ -754,7 +1025,10 @@
     prize2Input.addEventListener("change", updatePrizeSetting);
     prize3Input.addEventListener("change", updatePrizeSetting);
 
-    document.getElementById("recalcBtn").addEventListener("click", recalc);
+    document.getElementById("recalcBtn").addEventListener("click", () => {
+      renderPlayers();
+      recalc();
+    });
 
     document.getElementById("resetSession").addEventListener("click", () => {
       if (!confirm("Zerar todos os jogadores e configurações?")) return;
