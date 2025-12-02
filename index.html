@@ -100,7 +100,8 @@
     }
 
     input[type="number"],
-    input[type="text"] {
+    input[type="text"],
+    select {
       width: 100%;
       padding: 6px 8px;
       border-radius: 8px;
@@ -111,7 +112,8 @@
     }
 
     input[type="number"]:focus,
-    input[type="text"]:focus {
+    input[type="text"]:focus,
+    select:focus {
       outline: none;
       border-color: #007aff;
     }
@@ -204,8 +206,7 @@
       min-width: 80px;
     }
 
-    .position-input {
-      width: 100%;
+    .position-select {
       text-align: center;
     }
 
@@ -293,7 +294,8 @@
     }
 
     body.dark input[type="number"],
-    body.dark input[type="text"] {
+    body.dark input[type="text"],
+    body.dark select {
       background: #2c2c2e;
       border-color: #3a3a3c;
       color: #f5f5f5;
@@ -456,16 +458,20 @@
         Pote total: <span id="totalPot">R$ 0,00</span>
       </div>
 
-      <hr style="margin:12px 0;border:none;border-top:1px solid #eee;">
+      <hr style="margin:12px 0 8px;border:none;border-top:1px solid #eee;">
 
+      <!-- Tabela de prêmios com nomes -->
       <div class="summary-item">
-        <span>1º lugar</span><strong id="prize1Amount">R$ 0,00</strong>
+        <span>1º lugar: <span id="prize1Player">—</span></span>
+        <strong id="prize1Amount">R$ 0,00</strong>
       </div>
       <div class="summary-item">
-        <span>2º lugar</span><strong id="prize2Amount">R$ 0,00</strong>
+        <span>2º lugar: <span id="prize2Player">—</span></span>
+        <strong id="prize2Amount">R$ 0,00</strong>
       </div>
       <div class="summary-item">
-        <span>3º lugar</span><strong id="prize3Amount">R$ 0,00</strong>
+        <span>3º lugar: <span id="prize3Player">—</span></span>
+        <strong id="prize3Amount">R$ 0,00</strong>
       </div>
 
       <button id="recalcBtn" class="btn btn-primary">Recalcular</button>
@@ -492,8 +498,16 @@
   </footer>
 
   <script>
-    const STORAGE_KEY = "poker_tracker_state_v3";
+    const STORAGE_KEY = "poker_tracker_state_v4";
     const THEME_KEY = "poker_tracker_theme";
+
+    // Cache de prêmios para usar em ranking, WhatsApp e card
+    let prizeCache = {
+      totalPot: 0,
+      p1: 0,
+      p2: 0,
+      p3: 0
+    };
 
     // Formatação R$
     let moneyFormatter;
@@ -536,7 +550,7 @@
           name: "",
           buyIns: 0,
           rebuys: 0,
-          placement: 0
+          placement: ""
         }))
       };
     }
@@ -555,7 +569,10 @@
             name: p.name || "",
             buyIns: toNumber(p.buyIns, 0),
             rebuys: toNumber(p.rebuys, 0),
-            placement: toNumber(p.placement, 0)
+            placement: p.placement === 1 || p.placement === "1" ? "1"
+                      : p.placement === 2 || p.placement === "2" ? "2"
+                      : p.placement === 3 || p.placement === "3" ? "3"
+                      : ""
           }));
         }
         return parsed;
@@ -602,6 +619,10 @@
     const prize1AmountEl = document.getElementById("prize1Amount");
     const prize2AmountEl = document.getElementById("prize2Amount");
     const prize3AmountEl = document.getElementById("prize3Amount");
+
+    const prize1PlayerEl = document.getElementById("prize1Player");
+    const prize2PlayerEl = document.getElementById("prize2Player");
+    const prize3PlayerEl = document.getElementById("prize3Player");
 
     const rankingListEl = document.getElementById("rankingList");
     const playersSummaryListEl = document.getElementById("playersSummaryList");
@@ -681,6 +702,20 @@
       });
     }
 
+    function updatePrizeWinners(playersWithTotalsSorted) {
+      // Descobre quem é 1º, 2º, 3º pela coluna placement
+      const byPlacement = (place) =>
+        playersWithTotalsSorted.find(p => p.placement === String(place) && p.buyIns > 0);
+
+      const p1 = byPlacement(1);
+      const p2 = byPlacement(2);
+      const p3 = byPlacement(3);
+
+      prize1PlayerEl.textContent = p1 ? (p1.name || ("Jogador " + (p1.index + 1))) : "—";
+      prize2PlayerEl.textContent = p2 ? (p2.name || ("Jogador " + (p2.index + 1))) : "—";
+      prize3PlayerEl.textContent = p3 ? (p3.name || ("Jogador " + (p3.index + 1))) : "—";
+    }
+
     function renderRankingAndSummary(playersWithTotalsSorted) {
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
@@ -688,10 +723,10 @@
       rankingListEl.innerHTML = "";
       playersSummaryListEl.innerHTML = "";
 
-      // Ranking por colocação (somente jogadores com posição > 0 e ao menos 1 buy-in)
+      // Ranking de colocações 1,2,3
       const rankingPlayers = playersWithTotalsSorted
-        .filter(p => toNumber(p.placement, 0) > 0 && p.buyIns > 0)
-        .sort((a, b) => toNumber(a.placement, 0) - toNumber(b.placement, 0));
+        .filter(p => p.placement === "1" || p.placement === "2" || p.placement === "3")
+        .sort((a, b) => Number(a.placement) - Number(b.placement));
 
       if (rankingPlayers.length === 0) {
         rankingListEl.innerHTML =
@@ -707,11 +742,10 @@
           const icon = document.createElement("div");
           icon.className = "ranking-icon";
 
-          const place = toNumber(p.placement, 0);
-          if (place === 1) icon.textContent = "🥇";
-          else if (place === 2) icon.textContent = "🥈";
-          else if (place === 3) icon.textContent = "🥉";
-          else icon.textContent = place + "º";
+          if (p.placement === "1") icon.textContent = "🥇";
+          else if (p.placement === "2") icon.textContent = "🥈";
+          else if (p.placement === "3") icon.textContent = "🥉";
+          else icon.textContent = p.placement + "º";
 
           const nameSpan = document.createElement("span");
           nameSpan.className = "ranking-name";
@@ -721,7 +755,13 @@
           left.appendChild(nameSpan);
 
           const right = document.createElement("div");
-          right.textContent = formatMoney(p.totalSpent);
+          const placePrize =
+            p.placement === "1" ? prizeCache.p1 :
+            p.placement === "2" ? prizeCache.p2 :
+            p.placement === "3" ? prizeCache.p3 : 0;
+          const saldo = placePrize - p.totalSpent;
+
+          right.textContent = `Prêmio: ${formatMoney(placePrize)} | Saldo: ${formatMoney(saldo)}`;
 
           div.appendChild(left);
           div.appendChild(right);
@@ -765,6 +805,8 @@
           playersSummaryListEl.appendChild(div);
         });
       }
+
+      updatePrizeWinners(playersWithTotalsSorted);
     }
 
     function renderPlayers() {
@@ -855,24 +897,42 @@
         spentLabel.textContent = formatMoney(p.totalSpent);
         spentDiv.appendChild(spentLabel);
 
-        // Posição
+        // Posição (dropdown)
         const posDiv = document.createElement("div");
-        const posInput = document.createElement("input");
-        posInput.type = "number";
-        posInput.min = "0";
-        posInput.step = "1";
-        posInput.value = p.placement || 0;
-        posInput.className = "position-input";
-        posInput.addEventListener("change", () => {
+        const posSelect = document.createElement("select");
+        posSelect.className = "position-select";
+
+        const optEmpty = document.createElement("option");
+        optEmpty.value = "";
+        optEmpty.textContent = "—";
+
+        const opt1 = document.createElement("option");
+        opt1.value = "1";
+        opt1.textContent = "1º";
+
+        const opt2 = document.createElement("option");
+        opt2.value = "2";
+        opt2.textContent = "2º";
+
+        const opt3 = document.createElement("option");
+        opt3.value = "3";
+        opt3.textContent = "3º";
+
+        posSelect.appendChild(optEmpty);
+        posSelect.appendChild(opt1);
+        posSelect.appendChild(opt2);
+        posSelect.appendChild(opt3);
+
+        posSelect.value = p.placement || "";
+
+        posSelect.addEventListener("change", () => {
           const idx = p.index;
-          state.players[idx].placement = Math.max(
-            0,
-            Math.floor(toNumber(posInput.value, 0))
-          );
+          state.players[idx].placement = posSelect.value;
           saveState(state);
           renderRankingAndSummary(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
         });
-        posDiv.appendChild(posInput);
+
+        posDiv.appendChild(posSelect);
 
         row.appendChild(nameDiv);
         row.appendChild(buyDiv);
@@ -917,7 +977,6 @@
         });
       });
 
-      // Atualiza ranking e resumo com mesma ordem base
       renderRankingAndSummary(playersWithTotals);
     }
 
@@ -950,15 +1009,26 @@
 
       const totalPrizes = prize1Amount + prize2Amount + prize3Amount;
       const diff = totalPot - totalPrizes;
-      prize1Amount += diff; // ajusta centavos
+      prize1Amount += diff; // ajustes de centavos
 
       prize1AmountEl.textContent = formatMoney(prize1Amount);
       prize2AmountEl.textContent = formatMoney(prize2Amount);
       prize3AmountEl.textContent = formatMoney(prize3Amount);
+
+      // Atualiza cache
+      prizeCache.totalPot = totalPot;
+      prizeCache.p1 = prize1Amount;
+      prizeCache.p2 = prize2Amount;
+      prizeCache.p3 = prize3Amount;
+
+      // Atualiza colocações e nomes de ganhadores
+      renderRankingAndSummary(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
     }
 
     // Resumo para WhatsApp
     function buildWhatsappSummary() {
+      recalc(); // garante prêmios atualizados
+
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
 
@@ -969,12 +1039,12 @@
         totalRebuys += toNumber(p.rebuys);
       });
 
-      const totalPot = totalBuyIns * buyInValue + totalRebuys * rebuyValue;
+      const totalPot = prizeCache.totalPot;
       const playersSorted = buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent);
 
       const rankingPlayers = playersSorted
-        .filter(p => toNumber(p.placement, 0) > 0 && p.buyIns > 0)
-        .sort((a, b) => toNumber(a.placement, 0) - toNumber(b.placement, 0));
+        .filter(p => p.placement === "1" || p.placement === "2" || p.placement === "3")
+        .sort((a, b) => Number(a.placement) - Number(b.placement));
 
       const summaryPlayers = playersSorted
         .filter(p => p.buyIns >= 1)
@@ -995,15 +1065,24 @@
       if (rankingPlayers.length > 0) {
         lines.push("Colocações:");
         rankingPlayers.forEach((p) => {
-          const place = toNumber(p.placement, 0);
+          const place = p.placement;
           let icon = "";
-          if (place === 1) icon = "🥇";
-          else if (place === 2) icon = "🥈";
-          else if (place === 3) icon = "🥉";
+          if (place === "1") icon = "🥇";
+          else if (place === "2") icon = "🥈";
+          else if (place === "3") icon = "🥉";
           else icon = place + "º";
 
           const name = p.name || `Jogador ${p.index + 1}`;
-          lines.push(`${icon} ${name} – ${formatMoney(p.totalSpent)}`);
+          const placePrize =
+            place === "1" ? prizeCache.p1 :
+            place === "2" ? prizeCache.p2 :
+            place === "3" ? prizeCache.p3 : 0;
+          const saldo = placePrize - p.totalSpent;
+
+          lines.push(
+            `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
+            `Saldo: ${formatMoney(saldo)}`
+          );
         });
         lines.push("");
       } else {
@@ -1043,6 +1122,8 @@
 
     // Card em PNG
     function drawSummaryCard() {
+      recalc(); // garante prêmios atualizados
+
       const ctx = summaryCanvas.getContext("2d");
       const width = summaryCanvas.width;
       const height = summaryCanvas.height;
@@ -1062,9 +1143,6 @@
         y += 30;
       }
 
-      const buyInValue = toNumber(state.settings.buyInValue);
-      const rebuyValue = toNumber(state.settings.rebuyValue);
-
       let totalBuyIns = 0;
       let totalRebuys = 0;
       state.players.forEach((p) => {
@@ -1072,18 +1150,19 @@
         totalRebuys += toNumber(p.rebuys);
       });
 
-      const totalPot = totalBuyIns * buyInValue + totalRebuys * rebuyValue;
-
+      const totalPot = prizeCache.totalPot;
       ctx.fillText(`Pote total: ${formatMoney(totalPot)}`, 40, y);
       y += 30;
       ctx.fillText(`Buy-ins: ${totalBuyIns} · Rebuys: ${totalRebuys}`, 40, y);
       y += 40;
 
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+
       const playersSorted = buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent);
       const rankingPlayers = playersSorted
-        .filter(p => toNumber(p.placement, 0) > 0 && p.buyIns > 0)
-        .sort((a, b) => toNumber(a.placement, 0) - toNumber(b.placement, 0));
-
+        .filter(p => p.placement === "1" || p.placement === "2" || p.placement === "3")
+        .sort((a, b) => Number(a.placement) - Number(b.placement));
       const summaryPlayers = playersSorted
         .filter(p => p.buyIns >= 1)
         .sort((a, b) => b.totalSpent - a.totalSpent);
@@ -1097,15 +1176,23 @@
         y += 30;
       } else {
         rankingPlayers.forEach((p) => {
-          const place = toNumber(p.placement, 0);
+          const place = p.placement;
           let icon = "";
-          if (place === 1) icon = "🥇";
-          else if (place === 2) icon = "🥈";
-          else if (place === 3) icon = "🥉";
+          if (place === "1") icon = "🥇";
+          else if (place === "2") icon = "🥈";
+          else if (place === "3") icon = "🥉";
           else icon = place + "º";
 
           const name = p.name || `Jogador ${p.index + 1}`;
-          const line = `${icon} ${name} – ${formatMoney(p.totalSpent)}`;
+          const placePrize =
+            place === "1" ? prizeCache.p1 :
+            place === "2" ? prizeCache.p2 :
+            place === "3" ? prizeCache.p3 : 0;
+          const saldo = placePrize - p.totalSpent;
+
+          const line =
+            `${icon} ${name} – Prêmio: ${formatMoney(placePrize)} | ` +
+            `Saldo: ${formatMoney(saldo)}`;
           ctx.fillText(line, 40, y);
           y += 24;
         });
