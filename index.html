@@ -332,7 +332,7 @@
 </head>
 <body>
   <header>
-    <h1>Poker Tracker</h1>
+    <h1 id="pageTitle">Poker</h1>
     <button id="themeToggle" class="theme-toggle" aria-label="Alternar tema">🌙</button>
   </header>
 
@@ -611,6 +611,15 @@
 
     themeToggleBtn.addEventListener("click", toggleTheme);
     loadTheme();
+
+    // Atualiza o cabeçalho com a data do dia
+(function updateHeaderTitleWithDate() {
+  const titleEl = document.getElementById("pageTitle");
+  if (!titleEl) return;
+  const today = new Date();
+  const dateStr = formatDateBR(today);
+  titleEl.textContent = "Poker - " + dateStr;
+})();
 
     function renderSettings() {
       buyInInput.value = state.settings.buyInValue;
@@ -918,7 +927,7 @@
           else if (p.position === 3) emoji = "🥉";
 
           const posLabel = `${p.position}º`;
-          return `${emoji} ${posLabel} — ${p.name}`;
+          return `${emoji} ${posLabel} — ${p.name} (${formatMoney(p.prize || 0)})`;
         });
     }
 
