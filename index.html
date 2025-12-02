@@ -514,9 +514,9 @@ function buildSummary() {
 
   const lines = [];
 
+  lines.push(`Buy-ins: ${totalBuyIns}`);
+  lines.push(`Rebuys: ${totalRebuys}`);
   lines.push(`Buy-in: ${formatMoney(buyInValue)} | Rebuy: ${formatMoney(rebuyValue)}`);
-  lines.push(`Total buy-ins: ${totalBuyIns}`);
-  lines.push(`Total rebuys: ${totalRebuys}`);
   lines.push(`Pote total: ${formatMoney(totalPot)}`);
   lines.push("");
   lines.push("Prêmios:");
