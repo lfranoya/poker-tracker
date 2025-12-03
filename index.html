@@ -15,6 +15,10 @@
   <meta name="apple-mobile-web-app-title" content="Poker Tracker" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
 
+  <!-- Android / Chrome PWA helpers -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="Poker Tracker" />
+
   <style>
     * {
       box-sizing: border-box;
@@ -82,8 +86,8 @@
     .card {
       background: #ffffff;
       border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 16px;
+      padding: 14px;
+      margin-bottom: 18px;
       box-shadow: 0 1px 3px rgba(0,0,0,0.07);
       transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
@@ -118,7 +122,7 @@
     input[type="text"],
     select {
       width: 100%;
-      padding: 6px 8px;
+      padding: 7px 9px;
       border-radius: 8px;
       border: 1px solid #d0d0d4;
       font-size: 14px;
@@ -135,7 +139,7 @@
 
     .row {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       margin-bottom: 8px;
       flex-wrap: wrap;
     }
@@ -151,7 +155,7 @@
       gap: 6px;
       font-size: 11px;
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     .player-head div {
@@ -167,8 +171,8 @@
       grid-template-columns: 1.3fr 0.8fr 0.8fr 0.8fr 1.1fr 0.7fr;
       gap: 6px;
       align-items: center;
-      margin-bottom: 6px;
-      padding: 4px 4px;
+      margin-bottom: 8px;
+      padding: 6px 6px;
       border-radius: 8px;
       border: 1px solid transparent;
       transition: background 0.15s, border-color 0.15s;
@@ -187,16 +191,16 @@
     .counter {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       justify-content: center;
     }
 
     .counter button {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
       border: none;
-      font-size: 18px;
+      font-size: 20px;
       font-weight: 600;
       background: #f2f2f7;
       cursor: pointer;
@@ -204,9 +208,9 @@
     }
 
     .counter input {
-      width: 48px;
+      width: 52px;
       text-align: center;
-      padding: 4px;
+      padding: 5px;
       border-radius: 6px;
       border: 1px solid #d0d0d4;
       font-size: 14px;
@@ -407,9 +411,20 @@
     }
 
     @media (max-width: 480px) {
+      main {
+        padding: 12px;
+      }
+      .card {
+        padding: 12px;
+        margin-bottom: 16px;
+      }
       .player-head,
       .player-row {
-        grid-template-columns: 1.3fr 0.8fr 0.8fr 0.8fr 1.1fr 0.7fr;
+        grid-template-columns: 1.4fr 0.8fr 0.8fr 0.8fr 1.1fr 0.7fr;
+      }
+      .counter button {
+        width: 36px;
+        height: 36px;
       }
     }
 
@@ -480,15 +495,15 @@
       <div class="row">
         <div>
           <label for="buyInChips">Fichas Buy-In</label>
-          <input id="buyInChips" type="text" inputmode="numeric" />
+          <input id="buyInChips" type="text" inputmode="numeric" pattern="[0-9]*" />
         </div>
         <div>
           <label for="rebuyChips">Fichas Rebuy</label>
-          <input id="rebuyChips" type="text" inputmode="numeric" />
+          <input id="rebuyChips" type="text" inputmode="numeric" pattern="[0-9]*" />
         </div>
         <div>
           <label for="addOnChips">Fichas Add-On</label>
-          <input id="addOnChips" type="text" inputmode="numeric" />
+          <input id="addOnChips" type="text" inputmode="numeric" pattern="[0-9]*" />
         </div>
       </div>
 
@@ -597,7 +612,7 @@
   </footer>
 
   <script>
-    const APP_VERSION = "v2.2";
+    const APP_VERSION = "v2.3";
     const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
     const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
@@ -1022,6 +1037,7 @@
         const buyInput = document.createElement("input");
         buyInput.type = "text";
         buyInput.inputMode = "numeric";
+        buyInput.pattern = "[0-9]*";
         buyInput.min = "0";
         buyInput.step = "1";
         buyInput.value = p.buyIns;
@@ -1044,6 +1060,7 @@
         const rebuyInput = document.createElement("input");
         rebuyInput.type = "text";
         rebuyInput.inputMode = "numeric";
+        rebuyInput.pattern = "[0-9]*";
         rebuyInput.min = "0";
         rebuyInput.step = "1";
         rebuyInput.value = p.rebuys;
@@ -1066,6 +1083,7 @@
         const addOnInput = document.createElement("input");
         addOnInput.type = "text";
         addOnInput.inputMode = "numeric";
+        addOnInput.pattern = "[0-9]*";
         addOnInput.min = "0";
         addOnInput.step = "1";
         addOnInput.value = p.addOns || 0;
@@ -1419,7 +1437,6 @@
 
       const totalPot = prizeCache.totalPot;
 
-      // ---------- PASSO 1: MEDIR LARGURA E ALTURA NECESSÁRIAS ----------
       let maxTextWidth = 0;
       let totalLines = 0;
 
@@ -1431,7 +1448,7 @@
       }
 
       measureLine(title, "28px -apple-system, system-ui, sans-serif");
-      totalLines++; // linha em branco extra (offset)
+      totalLines++;
 
       const resumoArrecText =
         `Buy-Ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
@@ -1440,7 +1457,7 @@
 
       measureLine(`Pote Total: ${formatMoney(totalPot)}`, "bold 18px -apple-system, system-ui, sans-serif");
       measureLine(resumoArrecText, "18px -apple-system, system-ui, sans-serif");
-      totalLines++; // espaço antes do "Ranking:"
+      totalLines++;
       measureLine("Ranking:", "italic bold 18px -apple-system, system-ui, sans-serif");
 
       if (rankingPlayers.length === 0) {
@@ -1477,7 +1494,7 @@
         });
       }
 
-      totalLines++; // espaço antes de "Resultados detalhados:"
+      totalLines++;
       measureLine("Resultados detalhados:", "italic bold 18px -apple-system, system-ui, sans-serif");
 
       if (summaryPlayers.length === 0) {
@@ -1525,7 +1542,6 @@
       summaryCanvas.width = width;
       summaryCanvas.height = height;
 
-      // ---------- PASSO 2: DESENHAR COM O TAMANHO OTIMIZADO ----------
       const ctx2 = summaryCanvas.getContext("2d");
       ctx2.fillStyle = "#ffffff";
       ctx2.fillRect(0, 0, width, height);
