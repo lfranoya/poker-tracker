@@ -101,10 +101,23 @@
       justify-content: center;
     }
 
-    /* RESULTADOS maior e mais forte */
+    /* RESULTADOS maior, forte e centralizado */
     #resultsTitle {
       font-size: 18px;
       font-weight: 700;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+    }
+
+    #resultsTitle span {
+      display: inline-block;
+    }
+
+    .results-date {
+      font-size: inherit;
+      font-weight: inherit;
+      color: inherit;
     }
 
     .card-subtitle {
@@ -116,7 +129,7 @@
       gap: 6px;
     }
 
-    .results-date {
+    .results-date-inline {
       font-size: 13px;
       font-weight: 400;
       color: #666;
@@ -256,9 +269,10 @@
     }
 
     .total-pot {
-      font-size: 16px;   /* um pouco menor que antes */
+      font-size: 16px;
       font-weight: 600;
       margin-top: 6px;
+      color: #34a3dc; /* cor "cool" */
     }
 
     .btn {
@@ -343,13 +357,20 @@
       font-weight: 600;
     }
     .player-name-1 {
-      color: #34c759;
+      color: #34c759;  /* verde */
     }
     .player-name-2 {
-      color: #ff9500;
+      color: #ff9500;  /* laranja */
     }
     .player-name-3 {
-      color: #ffcc80;
+      color: #007aff;  /* azul para 3º */
+    }
+
+    /* Linhas de separação fortes */
+    .strong-separator {
+      margin: 12px 0 8px;
+      border: none;
+      border-top: 2px solid #555;
     }
 
     /* Dark mode */
@@ -419,8 +440,12 @@
       border-color: #30d158;
     }
 
-    body.dark .results-date {
+    body.dark .results-date-inline {
       color: #aaa;
+    }
+
+    body.dark .strong-separator {
+      border-top-color: #888;
     }
 
     @media (max-width: 480px) {
@@ -545,11 +570,14 @@
         <span>Total de rebuys</span><strong id="totalRebuys">0</strong>
       </div>
       <div class="total-pot">
-        Pote total: <span id="totalPot">R$ 0,00</span>
+        Pote Total: <span id="totalPot">R$ 0,00</span>
       </div>
 
+      <!-- Linha entre Pote Total e PRÊMIOS -->
+      <hr class="strong-separator">
+
       <!-- PRÊMIOS (somente valores, sem nomes/ícones/resultado) -->
-      <div class="card-subtitle" style="margin-top:12px;">PRÊMIOS</div>
+      <div class="card-subtitle" style="margin-top:4px;">PRÊMIOS</div>
       <div class="summary-item">
         <span>1º lugar</span>
         <strong id="prize1Amount">R$ 0,00</strong>
@@ -563,11 +591,14 @@
         <strong id="prize3Amount">R$ 0,00</strong>
       </div>
 
-      <hr style="margin:12px 0 8px;border:none;border-top:2px solid #555;">
+      <!-- Linha entre RANKING e Resultados detalhados ficará mais embaixo -->
 
-      <!-- COLOCAÇÕES e RESULTADOS DETALHADOS antes dos botões -->
-      <div class="card-subtitle" style="font-style:italic;">COLOCAÇÕES</div>
+      <!-- RANKING e RESULTADOS DETALHADOS antes dos botões -->
+      <div class="card-subtitle" style="font-style:italic;">RANKING</div>
       <div id="rankingList" class="ranking-list"></div>
+
+      <!-- Linha entre Ranking e Resultados detalhados -->
+      <hr class="strong-separator">
 
       <div class="card-subtitle" style="font-style:italic;">RESULTADOS DETALHADOS</div>
       <div id="playersSummaryList" class="ranking-list"></div>
@@ -588,7 +619,7 @@
   </footer>
 
   <script>
-    const APP_VERSION = "v1.1";
+    const APP_VERSION = "v1.2";
     const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
     const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
@@ -692,6 +723,26 @@
       }
     }
 
+    // Helpers de nome / cor
+    function getDisplayName(p) {
+      const base = (p.name && p.name.trim()) || ("Jogador " + (p.index + 1));
+      return base;
+    }
+
+    function getPlacementNameClass(placement) {
+      if (placement === "1") return "player-name player-name-1";
+      if (placement === "2") return "player-name player-name-2";
+      if (placement === "3") return "player-name player-name-3";
+      return "";
+    }
+
+    function getPlacementColor(placement) {
+      if (placement === "1") return "#34c759";
+      if (placement === "2") return "#ff9500";
+      if (placement === "3") return "#007aff";
+      return "#111111";
+    }
+
     // DOM refs
     const headerTitleEl = document.getElementById("headerTitle");
     const appVersionEl  = document.getElementById("appVersion");
@@ -726,7 +777,7 @@
         headerTitleEl.textContent = d ? "Poker - " + d : "Poker";
       }
       if (resultsDateLabelEl) {
-        resultsDateLabelEl.textContent = d ? d : "";
+        resultsDateLabelEl.textContent = d ? " - " + d : "";
       }
       if (appVersionEl) {
         appVersionEl.textContent = APP_VERSION;
@@ -793,13 +844,6 @@
       });
     }
 
-    function getPlacementNameClass(placement) {
-      if (placement === "1") return "player-name player-name-1";
-      if (placement === "2") return "player-name player-name-2";
-      if (placement === "3") return "player-name player-name-3";
-      return "";
-    }
-
     function renderRankingAndSummary(playersWithTotalsSorted) {
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
@@ -814,7 +858,7 @@
 
       if (rankingPlayers.length === 0) {
         rankingListEl.innerHTML =
-          '<div class="small-note">Ainda não há colocações definidas.</div>';
+          '<div class="small-note">Ainda não há posições definidas.</div>';
       } else {
         rankingPlayers.forEach((p) => {
           const div = document.createElement("div");
@@ -833,9 +877,9 @@
 
           const nameSpan = document.createElement("span");
           nameSpan.className = "ranking-name";
-          nameSpan.textContent = p.name || ("Jogador " + (p.index + 1));
+          nameSpan.textContent = getDisplayName(p);
 
-          // destaque de cor para premiados também aqui (opcionalmente)
+          // destaque de cor para premiados também aqui
           if (p.placement === "1") {
             nameSpan.style.color = "#34c759";
             nameSpan.style.fontWeight = "600";
@@ -843,7 +887,7 @@
             nameSpan.style.color = "#ff9500";
             nameSpan.style.fontWeight = "600";
           } else if (p.placement === "3") {
-            nameSpan.style.color = "#ffcc80";
+            nameSpan.style.color = "#007aff";
             nameSpan.style.fontWeight = "600";
           }
 
@@ -877,10 +921,17 @@
         });
       }
 
-      // Lista de todos os jogadores com 1+ buy-in (Resultados detalhados)
+      // Lista de todos os jogadores com 1+ buy-in (Resultados detalhados),
+      // AGORA em ordem alfabética pelo nome
       const summaryPlayers = playersWithTotalsSorted
         .filter(p => p.buyIns >= 1)
-        .sort((a, b) => b.totalSpent - a.totalSpent);
+        .sort((a, b) => {
+          const na = getDisplayName(a).toLocaleLowerCase("pt-BR");
+          const nb = getDisplayName(b).toLocaleLowerCase("pt-BR");
+          if (na < nb) return -1;
+          if (na > nb) return 1;
+          return 0;
+        });
 
       if (summaryPlayers.length === 0) {
         playersSummaryListEl.innerHTML =
@@ -898,11 +949,24 @@
             p.placement === "3" ? prizeCache.p3 : 0;
           const resultado = placePrize - p.totalSpent;
 
-          const namePlain = p.name || ("Jogador " + (p.index + 1));
+          const namePlain = getDisplayName(p);
           const nameClass = getPlacementNameClass(p.placement);
           const nameHtml = nameClass
             ? `<span class="${nameClass}">${namePlain}</span>`
             : namePlain;
+
+          // PRÊMIO só aparece se > 0, com mesma cor da posição
+          let premioHTML = "";
+          if (placePrize > 0) {
+            const prizeClass = getPlacementNameClass(p.placement);
+            if (prizeClass) {
+              premioHTML =
+                ` | <span class="${prizeClass}">PRÊMIO: ${formatMoney(placePrize)}</span>`;
+            } else {
+              premioHTML =
+                ` | PRÊMIO: ${formatMoney(placePrize)}`;
+            }
+          }
 
           let resultClass = "pay-receive";
           let resultText;
@@ -920,8 +984,8 @@
           div.innerHTML =
             `${nameHtml} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) ` +
             `| RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) ` +
-            `| GASTO: ${formatMoney(p.totalSpent)} ` +
-            `| PRÊMIO: ${formatMoney(placePrize)} ` +
+            `| GASTO: ${formatMoney(p.totalSpent)}` +
+            `${premioHTML} ` +
             `| ${resultadoHTML}`;
 
           playersSummaryListEl.appendChild(div);
@@ -1017,7 +1081,7 @@
         spentLabel.textContent = formatMoney(p.totalSpent);
         spentDiv.appendChild(spentLabel);
 
-        // Posição (dropdown)
+        // Posição (dropdown) com lógica de exclusividade
         const posDiv = document.createElement("div");
         const posSelect = document.createElement("select");
         posSelect.className = "position-select";
@@ -1047,9 +1111,21 @@
 
         posSelect.addEventListener("change", () => {
           const idx = p.index;
-          state.players[idx].placement = posSelect.value;
+          const newVal = posSelect.value;
+
+          // Exclusividade: se outra pessoa já tinha essa posição, ela volta para "—"
+          if (newVal === "1" || newVal === "2" || newVal === "3") {
+            state.players.forEach((pl, i) => {
+              if (i !== idx && pl.placement === newVal) {
+                pl.placement = "";
+              }
+            });
+          }
+
+          state.players[idx].placement = newVal;
           saveState(state);
-          renderRankingAndSummary(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
+          // Re-render para atualizar selects e ranking/resumo
+          renderPlayers();
         });
 
         posDiv.appendChild(posSelect);
@@ -1145,11 +1221,11 @@
       prizeCache.p2 = prize2Amount;
       prizeCache.p3 = prize3Amount;
 
-      // Atualiza colocações e resultados detalhados
+      // Atualiza ranking e resultados detalhados
       renderRankingAndSummary(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
     }
 
-    // Resumo para WhatsApp
+    // Resumo para WhatsApp (agora Resultados detalhados também em ordem alfabética)
     function buildWhatsappSummary() {
       recalc(); // garante prêmios atualizados
 
@@ -1172,7 +1248,13 @@
 
       const summaryPlayers = playersSorted
         .filter(p => p.buyIns >= 1)
-        .sort((a, b) => b.totalSpent - a.totalSpent);
+        .sort((a, b) => {
+          const na = getDisplayName(a).toLocaleLowerCase("pt-BR");
+          const nb = getDisplayName(b).toLocaleLowerCase("pt-BR");
+          if (na < nb) return -1;
+          if (na > nb) return 1;
+          return 0;
+        });
 
       const today = getTodayString();
 
@@ -1182,7 +1264,7 @@
       } else {
         lines.push("Resultados Poker");
       }
-      lines.push(`Pote total: ${formatMoney(totalPot)}`);
+      lines.push(`Pote Total: ${formatMoney(totalPot)}`);
       lines.push(
         `Buy-ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
         `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)})`
@@ -1190,17 +1272,17 @@
       lines.push("");
 
       if (rankingPlayers.length > 0) {
-        lines.push("Colocações:");
+        lines.push("Ranking:");
         rankingPlayers.forEach((p) => {
           const place = p.placement;
           let icon = "";
-          // WhatsApp segue com 1º, 2º, 3º conforme você pediu anteriormente
+          // WhatsApp segue com 1º, 2º, 3º (texto)
           if (place === "1") icon = "1º";
           else if (place === "2") icon = "2º";
           else if (place === "3") icon = "3º";
           else icon = place + "º";
 
-          const name = p.name || `Jogador ${p.index + 1}`;
+          const name = getDisplayName(p);
           const placePrize =
             place === "1" ? prizeCache.p1 :
             place === "2" ? prizeCache.p2 :
@@ -1226,7 +1308,7 @@
         });
         lines.push("");
       } else {
-        lines.push("Sem colocações definidas.");
+        lines.push("Sem posições definidas.");
         lines.push("");
       }
 
@@ -1235,7 +1317,7 @@
         lines.push("Nenhum jogador com buy-in registrado.");
       } else {
         summaryPlayers.forEach((p) => {
-          const name = p.name || `Jogador ${p.index + 1}`;
+          const name = getDisplayName(p);
           const totalBuyInValue = p.buyIns * buyInValue;
           const totalRebuyValue = p.rebuys * rebuyValue;
           const placePrize =
@@ -1244,21 +1326,26 @@
             p.placement === "3" ? prizeCache.p3 : 0;
           const resultado = placePrize - p.totalSpent;
 
+          let premioText = "";
+          if (placePrize > 0) {
+            premioText = ` | PRÊMIO: ${formatMoney(placePrize)}`;
+          }
+
           let resultadoText = "";
           if (resultado > 0) {
-            resultadoText = `+ ${formatMoney(Math.abs(resultado))}`;
+            resultadoText = ` | Resultado: + ${formatMoney(Math.abs(resultado))}`;
           } else if (resultado < 0) {
-            resultadoText = `- ${formatMoney(Math.abs(resultado))}`;
+            resultadoText = ` | Resultado: - ${formatMoney(Math.abs(resultado))}`;
           } else {
-            resultadoText = formatMoney(0);
+            resultadoText = ` | Resultado: ${formatMoney(0)}`;
           }
 
           lines.push(
             `${name} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
             `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
-            `GASTO: ${formatMoney(p.totalSpent)} | ` +
-            `PRÊMIO: ${formatMoney(placePrize)} | ` +
-            `Resultado: ${resultadoText}`
+            `GASTO: ${formatMoney(p.totalSpent)}` +
+            `${premioText}` +
+            `${resultadoText}`
           );
           lines.push(""); // linha em branco entre jogadores
         });
@@ -1279,13 +1366,6 @@
     });
 
     // Card em PNG
-    function getPlacementColor(placement) {
-      if (placement === "1") return "#34c759";
-      if (placement === "2") return "#ff9500";
-      if (placement === "3") return "#ffcc80";
-      return "#111111";
-    }
-
     function drawSummaryCard() {
       recalc(); // garante prêmios atualizados
 
@@ -1318,10 +1398,10 @@
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
 
-      // Pote total em negrito e azul
-      ctx.fillStyle = "#007aff";
+      // Pote Total em negrito e azul/teal
+      ctx.fillStyle = "#34a3dc";
       ctx.font = "bold 18px -apple-system, system-ui, sans-serif";
-      ctx.fillText(`Pote total: ${formatMoney(totalPot)}`, 40, y);
+      ctx.fillText(`Pote Total: ${formatMoney(totalPot)}`, 40, y);
       y += 30;
 
       ctx.fillStyle = "#111111";
@@ -1340,18 +1420,24 @@
         .sort((a, b) => Number(a.placement) - Number(b.placement));
       const summaryPlayers = playersSorted
         .filter(p => p.buyIns >= 1)
-        .sort((a, b) => b.totalSpent - a.totalSpent);
+        .sort((a, b) => {
+          const na = getDisplayName(a).toLocaleLowerCase("pt-BR");
+          const nb = getDisplayName(b).toLocaleLowerCase("pt-BR");
+          if (na < nb) return -1;
+          if (na > nb) return 1;
+          return 0;
+        });
 
-      // Colocações (bold + itálico)
+      // RANKING (bold + itálico)
       ctx.font = "italic bold 18px -apple-system, system-ui, sans-serif";
       ctx.fillStyle = "#111111";
-      ctx.fillText("Colocações:", 40, y);
+      ctx.fillText("RANKING:", 40, y);
       y += 30;
 
       ctx.font = "16px -apple-system, system-ui, sans-serif";
 
       if (rankingPlayers.length === 0) {
-        ctx.fillText("Sem colocações definidas.", 40, y);
+        ctx.fillText("Sem posições definidas.", 40, y);
         y += 30;
       } else {
         rankingPlayers.forEach((p) => {
@@ -1362,7 +1448,7 @@
           else if (place === "3") icon = "🥉";
           else icon = place + "º";
 
-          const name = p.name || `Jogador ${p.index + 1}`;
+          const name = getDisplayName(p);
           const placePrize =
             place === "1" ? prizeCache.p1 :
             place === "2" ? prizeCache.p2 :
@@ -1383,7 +1469,7 @@
           ctx.fillText(name, 40 + prefixWidth, y);
           const nameWidth = ctx.measureText(name).width;
 
-          // " – Prêmio: ... | "
+          // " – Prêmio: ... | " (PRÊMIO sempre mostrado aqui)
           const restBeforeResult =
             " – Prêmio: " + formatMoney(placePrize) + " | ";
           ctx.fillStyle = "#111111";
@@ -1425,7 +1511,7 @@
         summaryPlayers.forEach((p) => {
           if (y >= height - 20) return;
 
-          const name = p.name || `Jogador ${p.index + 1}`;
+          const name = getDisplayName(p);
           const totalBuyInValue = p.buyIns * buyInValue;
           const totalRebuyValue = p.rebuys * rebuyValue;
           const placePrize =
@@ -1436,24 +1522,33 @@
 
           const nameColor = getPlacementColor(p.placement);
 
+          // Nome
           const segment1 = name;
-          const segment2 =
+          // Parte fixa até (eventual) PRÊMIO
+          let segment2 =
             " - BI: " + p.buyIns + " (" + formatMoney(totalBuyInValue) + ")" +
             " | RB: " + p.rebuys + " (" + formatMoney(totalRebuyValue) + ")" +
-            " | GASTO: " + formatMoney(p.totalSpent) +
-            " | PRÊMIO: " + formatMoney(placePrize) +
-            " | ";
+            " | GASTO: " + formatMoney(p.totalSpent);
 
+          // PRÊMIO só aparece se > 0, com cor da posição
+          let prizeSegment = "";
+          let prizeColor = "#111111";
+          if (placePrize > 0) {
+            prizeSegment = " | PRÊMIO: " + formatMoney(placePrize);
+            prizeColor = nameColor;
+          }
+
+          // Resultado
           let resultSegment;
           let resultColor = "#111111";
           if (resultado > 0) {
-            resultSegment = "Resultado: + " + formatMoney(Math.abs(resultado));
+            resultSegment = " | Resultado: + " + formatMoney(Math.abs(resultado));
             resultColor = "#34c759";
           } else if (resultado < 0) {
-            resultSegment = "Resultado: - " + formatMoney(Math.abs(resultado));
+            resultSegment = " | Resultado: - " + formatMoney(Math.abs(resultado));
             resultColor = "#ff3b30";
           } else {
-            resultSegment = "Resultado: " + formatMoney(0);
+            resultSegment = " | Resultado: " + formatMoney(0);
           }
 
           // Nome colorido
@@ -1461,14 +1556,23 @@
           ctx.fillText(segment1, 40, y);
           const w1 = ctx.measureText(segment1).width;
 
-          // Resto em preto
+          // Parte fixa (sem prêmio) em preto
           ctx.fillStyle = "#111111";
           ctx.fillText(segment2, 40 + w1, y);
           const w2 = ctx.measureText(segment2).width;
 
-          // Resultado colorido (incluindo palavra Resultado:)
+          let xOffset = 40 + w1 + w2;
+
+          // PRÊMIO colorido (se existir)
+          if (prizeSegment) {
+            ctx.fillStyle = prizeColor;
+            ctx.fillText(prizeSegment, xOffset, y);
+            xOffset += ctx.measureText(prizeSegment).width;
+          }
+
+          // Resultado colorido
           ctx.fillStyle = resultColor;
-          ctx.fillText(resultSegment, 40 + w1 + w2, y);
+          ctx.fillText(resultSegment, xOffset, y);
 
           y += 22;
         });
