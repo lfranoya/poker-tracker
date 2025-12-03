@@ -88,7 +88,6 @@
       transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
 
-    /* Títulos principais dos “bubbles” */
     .card-title {
       font-size: 17px;
       font-weight: 600;
@@ -101,7 +100,6 @@
       width: 100%;
     }
 
-    /* Subtítulos: Arrecadação, Prêmios, Ranking, Resultados detalhados */
     .card-title.sub-title {
       font-size: 14px;
       font-weight: 600;
@@ -218,7 +216,7 @@
 
     .spent-label {
       font-size: 14px;
-      text-align: right;
+      text-align: center;
       padding-right: 4px;
       min-width: 80px;
     }
@@ -247,6 +245,10 @@
       font-weight: 600;
       margin-top: 6px;
       color: #007aff;
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #007aff;
     }
 
     .btn {
@@ -470,6 +472,10 @@
           <label for="rebuyValue">Valor do Rebuy (R$)</label>
           <input id="rebuyValue" type="number" min="0" step="0.01" inputmode="decimal" />
         </div>
+        <div>
+          <label for="addOnValue">Valor do Add-On (R$)</label>
+          <input id="addOnValue" type="number" min="0" step="0.01" inputmode="decimal" />
+        </div>
       </div>
       <div class="row">
         <div>
@@ -582,7 +588,7 @@
       </button>
       <button id="pngCardBtn" class="btn btn-card">Gerar Card</button>
 
-      <canvas id="summaryCanvas" width="900" height="700"></canvas>
+      <canvas id="summaryCanvas" width="1080" height="700"></canvas>
     </section>
   </main>
 
@@ -591,7 +597,7 @@
   </footer>
 
   <script>
-    const APP_VERSION = "v2.0";
+    const APP_VERSION = "v2.1";
     const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
     const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
@@ -636,6 +642,7 @@
         settings: {
           buyInValue: 50,
           rebuyValue: 50,
+          addOnValue: 50,
           buyInChips: 14000,
           rebuyChips: 12000,
           addOnChips: 12000,
@@ -664,6 +671,7 @@
         const def = defaultState().settings;
         parsed.settings.buyInValue  = toNumber(parsed.settings.buyInValue, def.buyInValue);
         parsed.settings.rebuyValue  = toNumber(parsed.settings.rebuyValue, def.rebuyValue);
+        parsed.settings.addOnValue  = toNumber(parsed.settings.addOnValue, def.addOnValue);
         parsed.settings.buyInChips  = toNumber(parsed.settings.buyInChips, def.buyInChips);
         parsed.settings.rebuyChips  = toNumber(parsed.settings.rebuyChips, def.rebuyChips);
         parsed.settings.addOnChips  = toNumber(parsed.settings.addOnChips, def.addOnChips);
@@ -728,6 +736,7 @@
 
     const buyInInput = document.getElementById("buyInValue");
     const rebuyInput = document.getElementById("rebuyValue");
+    const addOnValueInput = document.getElementById("addOnValue");
     const buyInChipsInput = document.getElementById("buyInChips");
     const rebuyChipsInput = document.getElementById("rebuyChips");
     const addOnChipsInput = document.getElementById("addOnChips");
@@ -789,6 +798,7 @@
     function renderSettings() {
       buyInInput.value = state.settings.buyInValue;
       rebuyInput.value = state.settings.rebuyValue;
+      addOnValueInput.value = state.settings.addOnValue;
       buyInChipsInput.value = formatInt(state.settings.buyInChips);
       rebuyChipsInput.value = formatInt(state.settings.rebuyChips);
       addOnChipsInput.value = formatInt(state.settings.addOnChips);
@@ -814,7 +824,7 @@
     function buildPlayersWithTotals() {
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
-      const addOnValue = buyInValue; // Add-On usa mesmo valor do Buy-In
+      const addOnValue = toNumber(state.settings.addOnValue);
 
       return state.players.map((p, index) => {
         const totalSpent =
@@ -828,7 +838,7 @@
     function renderRankingAndSummary(playersWithTotalsSorted) {
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
-      const addOnValue = buyInValue;
+      const addOnValue = toNumber(state.settings.addOnValue);
 
       rankingListEl.innerHTML = "";
       playersSummaryListEl.innerHTML = "";
@@ -1171,7 +1181,7 @@
     function recalc() {
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
-      const addOnValue = buyInValue; // Add-On usa mesmo valor do Buy-In
+      const addOnValue = toNumber(state.settings.addOnValue);
 
       let totalBuyIns = 0;
       let totalRebuys = 0;
@@ -1224,7 +1234,7 @@
 
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
-      const addOnValue = buyInValue;
+      const addOnValue = toNumber(state.settings.addOnValue);
 
       let totalBuyIns = 0;
       let totalRebuys = 0;
@@ -1366,55 +1376,6 @@
     function drawSummaryCard() {
       recalc();
 
-      const ctx = summaryCanvas.getContext("2d");
-      const width = summaryCanvas.width;
-      const height = summaryCanvas.height;
-
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, width, height);
-
-      const today = getTodayString();
-      let title = "Resultados Poker";
-      if (today) title += " - " + today;
-
-      ctx.fillStyle = "#111111";
-      ctx.font = "28px -apple-system, system-ui, sans-serif";
-      ctx.fillText(title, 40, 60);
-
-      let y = 100;
-      ctx.font = "18px -apple-system, system-ui, sans-serif";
-
-      let totalBuyIns = 0;
-      let totalRebuys = 0;
-      let totalAddOns = 0;
-      state.players.forEach((p) => {
-        totalBuyIns += toNumber(p.buyIns);
-        totalRebuys += toNumber(p.rebuys);
-        totalAddOns += toNumber(p.addOns);
-      });
-
-      const buyInValue = toNumber(state.settings.buyInValue);
-      const rebuyValue = toNumber(state.settings.rebuyValue);
-      const addOnValue = buyInValue;
-
-      const totalPot = prizeCache.totalPot;
-
-      ctx.fillStyle = "#007aff";
-      ctx.font = "bold 18px -apple-system, system-ui, sans-serif";
-      ctx.fillText(`Pote Total: ${formatMoney(totalPot)}`, 40, y);
-      y += 30;
-
-      ctx.fillStyle = "#34a3dc";
-      ctx.font = "18px -apple-system, system-ui, sans-serif";
-      ctx.fillText(
-        `Buy-Ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
-        `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)}) · ` +
-        `Add-Ons: ${totalAddOns} (${formatMoney(totalAddOns * addOnValue)})`,
-        40,
-        y
-      );
-      y += 40;
-
       const playersSorted = buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent);
       const rankingPlayers = playersSorted
         .filter(p => p.placement === "1" || p.placement === "2" || p.placement === "3")
@@ -1429,16 +1390,85 @@
           return 0;
         });
 
+      const lineHeight = 24;
+      const topMargin = 40;
+      const bottomMargin = 40;
+
+      let lines = 0;
+      lines += 1; // título
+      lines += 2; // Pote total + arrecadação
+      lines += 1; // espaço antes do ranking
+      lines += 1; // "Ranking:"
+      lines += Math.max(1, rankingPlayers.length);
+      lines += 1; // espaço entre ranking e resultados detalhados
+      lines += 1; // "Resultados detalhados:"
+      lines += Math.max(1, summaryPlayers.length);
+
+      const width = 1080;
+      const height = topMargin + lines * lineHeight + bottomMargin;
+
+      summaryCanvas.width = width;
+      summaryCanvas.height = height;
+
+      const ctx = summaryCanvas.getContext("2d");
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, width, height);
+
+      const leftX = 40;
+      const today = getTodayString();
+      let title = "Resultados Poker";
+      if (today) title += " - " + today;
+
+      ctx.fillStyle = "#111111";
+      ctx.font = "28px -apple-system, system-ui, sans-serif";
+      let y = topMargin;
+      ctx.fillText(title, leftX, y);
+      y += lineHeight + 10;
+
+      ctx.font = "18px -apple-system, system-ui, sans-serif";
+
+      let totalBuyIns = 0;
+      let totalRebuys = 0;
+      let totalAddOns = 0;
+      state.players.forEach((p) => {
+        totalBuyIns += toNumber(p.buyIns);
+        totalRebuys += toNumber(p.rebuys);
+        totalAddOns += toNumber(p.addOns);
+      });
+
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+      const addOnValue = toNumber(state.settings.addOnValue);
+
+      const totalPot = prizeCache.totalPot;
+
+      ctx.fillStyle = "#007aff";
+      ctx.font = "bold 18px -apple-system, system-ui, sans-serif";
+      ctx.fillText(`Pote Total: ${formatMoney(totalPot)}`, leftX, y);
+      y += lineHeight + 6;
+
+      ctx.fillStyle = "#34a3dc";
+      ctx.font = "18px -apple-system, system-ui, sans-serif";
+      ctx.fillText(
+        `Buy-Ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
+        `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)}) · ` +
+        `Add-Ons: ${totalAddOns} (${formatMoney(totalAddOns * addOnValue)})`,
+        leftX,
+        y
+      );
+      y += lineHeight + 10;
+
       ctx.font = "italic bold 18px -apple-system, system-ui, sans-serif";
       ctx.fillStyle = "#111111";
-      ctx.fillText("Ranking:", 40, y);
-      y += 30;
+      ctx.fillText("Ranking:", leftX, y);
+      y += lineHeight;
 
       ctx.font = "16px -apple-system, system-ui, sans-serif";
 
       if (rankingPlayers.length === 0) {
-        ctx.fillText("Sem posições definidas.", 40, y);
-        y += 30;
+        ctx.fillText("Sem posições definidas.", leftX, y);
+        y += lineHeight;
       } else {
         rankingPlayers.forEach((p) => {
           const place = p.placement;
@@ -1460,8 +1490,7 @@
           const basePrefix =
             icon + " " + name + " – Prêmio: " + formatMoney(placePrize) + " ( ";
           ctx.fillStyle = lineColor;
-          if (y >= height - 20) return;
-          ctx.fillText(basePrefix, 40, y);
+          ctx.fillText(basePrefix, leftX, y);
           const prefixWidth = ctx.measureText(basePrefix).width;
 
           let resultText;
@@ -1477,30 +1506,28 @@
           }
 
           ctx.fillStyle = resultColor;
-          ctx.fillText(resultText, 40 + prefixWidth, y);
+          ctx.fillText(resultText, leftX + prefixWidth, y);
           const resultWidth = ctx.measureText(resultText).width;
 
           ctx.fillStyle = lineColor;
-          ctx.fillText(" )", 40 + prefixWidth + resultWidth, y);
+          ctx.fillText(" )", leftX + prefixWidth + resultWidth, y);
 
-          y += 24;
+          y += lineHeight;
         });
       }
 
-      y += 20;
+      y += 10;
       ctx.font = "italic bold 18px -apple-system, system-ui, sans-serif";
       ctx.fillStyle = "#111111";
-      ctx.fillText("Resultados detalhados:", 40, y);
-      y += 30;
+      ctx.fillText("Resultados detalhados:", leftX, y);
+      y += lineHeight;
 
       ctx.font = "16px -apple-system, system-ui, sans-serif";
 
       if (summaryPlayers.length === 0) {
-        ctx.fillText("Nenhum jogador com Buy-In registrado.", 40, y);
+        ctx.fillText("Nenhum jogador com Buy-In registrado.", leftX, y);
       } else {
         summaryPlayers.forEach((p) => {
-          if (y >= height - 20) return;
-
           const name = getDisplayName(p);
           const totalBuyInValue = p.buyIns * buyInValue;
           const totalRebuyValue = p.rebuys * rebuyValue;
@@ -1539,13 +1566,13 @@
           }
 
           ctx.fillStyle = isWinner ? lineColor : "#111111";
-          ctx.fillText(prefixText, 40, y);
+          ctx.fillText(prefixText, leftX, y);
           const prefixWidth = ctx.measureText(prefixText).width;
 
           ctx.fillStyle = resultColor;
-          ctx.fillText(resultSegment, 40 + prefixWidth, y);
+          ctx.fillText(resultSegment, leftX + prefixWidth, y);
 
-          y += 22;
+          y += lineHeight;
         });
       }
     }
@@ -1571,6 +1598,13 @@
 
     rebuyInput.addEventListener("change", () => {
       state.settings.rebuyValue = toNumber(rebuyInput.value, 0);
+      saveState(state);
+      renderPlayers();
+      recalc();
+    });
+
+    addOnValueInput.addEventListener("change", () => {
+      state.settings.addOnValue = toNumber(addOnValueInput.value, 0);
       saveState(state);
       renderPlayers();
       recalc();
