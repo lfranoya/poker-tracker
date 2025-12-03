@@ -1,12 +1,12 @@
 {
   "name": "Poker Tracker",
   "short_name": "Poker",
-  "start_url": "./index.html",
-  "scope": "./",
+  "description": "App simples para controlar Buy-In, Rebuy, Add-On e prêmios em partidas de poker entre amigos.",
+  "start_url": "./",
   "display": "standalone",
-  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
+  "lang": "pt-BR",
   "icons": [
     {
       "src": "icons/icon-192.png",
