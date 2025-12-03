@@ -156,7 +156,7 @@
       min-width: 90px;
     }
 
-    /* Grid estável para Configurações do Jogo */
+    /* Configurações do jogo */
     .config-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -168,15 +168,16 @@
       min-width: 0;
     }
 
+    /* Cabeçalho da tabela de jogadores */
     .player-head {
       display: grid;
       grid-template-columns:
-        1.4fr   /* Jogador      */
-        40px    /* Buy-In       */
-        40px    /* Rebuys       */
-        40px    /* Add-On       */
-        90px   /* Total        */
-        40px;   /* Posição      */
+        1.4fr    /* Jogador  */
+        72px     /* Buy-In   */
+        72px     /* Rebuys   */
+        72px     /* Add-On   */
+        100px    /* Total    */
+        60px;    /* Posição  */
       gap: 4px;
       font-size: 11px;
       font-weight: 600;
@@ -192,15 +193,16 @@
       text-align: left;
     }
 
+    /* Linhas de jogadores */
     .player-row {
       display: grid;
       grid-template-columns:
         1.4fr
-        40px
-        40px
-        40px
-        90px
-        40px;
+        72px
+        72px
+        72px
+        100px
+        60px;
       gap: 4px;
       align-items: center;
       margin-bottom: 8px;
@@ -234,18 +236,23 @@
       min-width: 0;
     }
 
+    /* CONTADORES v2.6 – [ x ] + sem sobreposição */
     .counter {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 4px;
+      justify-content: center;
+      gap: 2px;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .counter-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      flex: 0 1 20px;
+      width: 20px;
+      height: 26px;
+      border-radius: 6px;
       border: none;
-      font-size: 18px;
+      font-size: 14px;
       font-weight: 700;
       background: #f2f2f7;
       cursor: pointer;
@@ -256,12 +263,14 @@
     }
 
     .counter-input {
-      width: 40px;
+      flex: 1 1 0;
+      min-width: 0;
+      max-width: 100%;
       text-align: center;
-      padding: 5px;
+      padding: 3px;
       border-radius: 6px;
       border: 1px solid #d0d0d4;
-      font-size: 14px;
+      font-size: 12px;
       background: #ffffff;
       color: inherit;
     }
@@ -274,6 +283,7 @@
 
     .position-select {
       text-align: center;
+      width: 100%;
     }
 
     .summary-item {
@@ -473,11 +483,11 @@
         gap: 4px;
       }
       .counter-btn {
-        width: 30px;
-        height: 30px;
+        width: 20px;
+        height: 24px;
       }
       .counter-input {
-        width: 36px;
+        font-size: 11px;
       }
     }
 
@@ -495,8 +505,8 @@
       .player-row > div:nth-child(6) { grid-column: 2 / 3; grid-row: 1; } /* posição */
       .player-row > div:nth-child(2) { grid-column: 1 / 2; grid-row: 2; }
       .player-row > div:nth-child(3) { grid-column: 2 / 3; grid-row: 2; }
-      .player-row > div:nth-child(4) { display: none; } /* esconde Add-On em modo ultra compacto se ficar muito apertado */
-      .player-row > div:nth-child(5) { display: none; } /* esconde total em modo ultra compacto */
+      .player-row > div:nth-child(4) { display: none; } /* esconde Add-On se ficar muito apertado */
+      .player-row > div:nth-child(5) { display: none; } /* esconde Total se ficar muito apertado */
     }
 
     .ranking-list {
@@ -685,7 +695,7 @@
   </footer>
 
   <script>
-    const APP_VERSION = "v2.55";
+    const APP_VERSION = "v2.6";
     const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
     const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
@@ -813,9 +823,9 @@
     }
 
     function getPlacementColor(placement) {
-      if (placement === "1") return "#34c759"; // verde
-      if (placement === "2") return "#ff9500"; // laranja
-      if (placement === "3") return "#007aff"; // azul
+      if (placement === "1") return "#34c759";
+      if (placement === "2") return "#ff9500";
+      if (placement === "3") return "#007aff";
       return "#111111";
     }
 
@@ -1596,13 +1606,14 @@
             p.placement === "3" ? prizeCache.p3 : 0;
           const resultado = placePrize - p.totalSpent;
 
-          let prefixText =
+          const base =
             name +
             " - BI: " + p.buyIns + " (" + formatMoney(totalBuyInValue) + ")" +
             " | RB: " + p.rebuys + " (" + formatMoney(totalRebuyValue) + ")" +
             " | AD: " + p.addOns + " (" + formatMoney(totalAddOnValue) + ")" +
             " | Gasto: " + formatMoney(p.totalSpent);
 
+          let prefixText = base;
           if (placePrize > 0) {
             prefixText += " | Prêmio: " + formatMoney(placePrize);
           }
