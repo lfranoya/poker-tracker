@@ -466,15 +466,15 @@
       <div class="row">
         <div>
           <label for="buyInValue">Valor do Buy-In (R$)</label>
-          <input id="buyInValue" type="number" min="0" step="0.01" inputmode="decimal" />
+          <input id="buyInValue" type="text" inputmode="decimal" />
         </div>
         <div>
           <label for="rebuyValue">Valor do Rebuy (R$)</label>
-          <input id="rebuyValue" type="number" min="0" step="0.01" inputmode="decimal" />
+          <input id="rebuyValue" type="text" inputmode="decimal" />
         </div>
         <div>
           <label for="addOnValue">Valor do Add-On (R$)</label>
-          <input id="addOnValue" type="number" min="0" step="0.01" inputmode="decimal" />
+          <input id="addOnValue" type="text" inputmode="decimal" />
         </div>
       </div>
       <div class="row">
@@ -597,7 +597,7 @@
   </footer>
 
   <script>
-    const APP_VERSION = "v2.1";
+    const APP_VERSION = "v2.2";
     const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
     const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
@@ -1020,7 +1020,8 @@
         buyMinus.textContent = "–";
 
         const buyInput = document.createElement("input");
-        buyInput.type = "number";
+        buyInput.type = "text";
+        buyInput.inputMode = "numeric";
         buyInput.min = "0";
         buyInput.step = "1";
         buyInput.value = p.buyIns;
@@ -1041,7 +1042,8 @@
         rebuyMinus.textContent = "–";
 
         const rebuyInput = document.createElement("input");
-        rebuyInput.type = "number";
+        rebuyInput.type = "text";
+        rebuyInput.inputMode = "numeric";
         rebuyInput.min = "0";
         rebuyInput.step = "1";
         rebuyInput.value = p.rebuys;
@@ -1062,7 +1064,8 @@
         addOnMinus.textContent = "–";
 
         const addOnInput = document.createElement("input");
-        addOnInput.type = "number";
+        addOnInput.type = "text";
+        addOnInput.inputMode = "numeric";
         addOnInput.min = "0";
         addOnInput.step = "1";
         addOnInput.value = p.addOns || 0;
@@ -1390,43 +1393,20 @@
           return 0;
         });
 
+      const ctx = summaryCanvas.getContext("2d");
       const lineHeight = 24;
       const topMargin = 40;
       const bottomMargin = 40;
-
-      let lines = 0;
-      lines += 1; // título
-      lines += 2; // Pote total + arrecadação
-      lines += 1; // espaço antes do ranking
-      lines += 1; // "Ranking:"
-      lines += Math.max(1, rankingPlayers.length);
-      lines += 1; // espaço entre ranking e resultados detalhados
-      lines += 1; // "Resultados detalhados:"
-      lines += Math.max(1, summaryPlayers.length);
-
-      const width = 1080;
-      const height = topMargin + lines * lineHeight + bottomMargin;
-
-      summaryCanvas.width = width;
-      summaryCanvas.height = height;
-
-      const ctx = summaryCanvas.getContext("2d");
-
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, width, height);
-
       const leftX = 40;
+      const rightMargin = 40;
+
       const today = getTodayString();
       let title = "Resultados Poker";
       if (today) title += " - " + today;
 
-      ctx.fillStyle = "#111111";
-      ctx.font = "28px -apple-system, system-ui, sans-serif";
-      let y = topMargin;
-      ctx.fillText(title, leftX, y);
-      y += lineHeight + 10;
-
-      ctx.font = "18px -apple-system, system-ui, sans-serif";
+      const buyInValue = toNumber(state.settings.buyInValue);
+      const rebuyValue = toNumber(state.settings.rebuyValue);
+      const addOnValue = toNumber(state.settings.addOnValue);
 
       let totalBuyIns = 0;
       let totalRebuys = 0;
@@ -1437,37 +1417,145 @@
         totalAddOns += toNumber(p.addOns);
       });
 
-      const buyInValue = toNumber(state.settings.buyInValue);
-      const rebuyValue = toNumber(state.settings.rebuyValue);
-      const addOnValue = toNumber(state.settings.addOnValue);
-
       const totalPot = prizeCache.totalPot;
 
-      ctx.fillStyle = "#007aff";
-      ctx.font = "bold 18px -apple-system, system-ui, sans-serif";
-      ctx.fillText(`Pote Total: ${formatMoney(totalPot)}`, leftX, y);
-      y += lineHeight + 6;
+      // ---------- PASSO 1: MEDIR LARGURA E ALTURA NECESSÁRIAS ----------
+      let maxTextWidth = 0;
+      let totalLines = 0;
 
-      ctx.fillStyle = "#34a3dc";
-      ctx.font = "18px -apple-system, system-ui, sans-serif";
-      ctx.fillText(
+      function measureLine(text, font) {
+        ctx.font = font;
+        const w = ctx.measureText(text).width;
+        if (w > maxTextWidth) maxTextWidth = w;
+        totalLines++;
+      }
+
+      measureLine(title, "28px -apple-system, system-ui, sans-serif");
+      totalLines++; // linha em branco extra (offset)
+
+      const resumoArrecText =
         `Buy-Ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
         `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)}) · ` +
-        `Add-Ons: ${totalAddOns} (${formatMoney(totalAddOns * addOnValue)})`,
-        leftX,
-        y
-      );
-      y += lineHeight + 10;
+        `Add-Ons: ${totalAddOns} (${formatMoney(totalAddOns * addOnValue)})`;
 
-      ctx.font = "italic bold 18px -apple-system, system-ui, sans-serif";
-      ctx.fillStyle = "#111111";
-      ctx.fillText("Ranking:", leftX, y);
-      y += lineHeight;
-
-      ctx.font = "16px -apple-system, system-ui, sans-serif";
+      measureLine(`Pote Total: ${formatMoney(totalPot)}`, "bold 18px -apple-system, system-ui, sans-serif");
+      measureLine(resumoArrecText, "18px -apple-system, system-ui, sans-serif");
+      totalLines++; // espaço antes do "Ranking:"
+      measureLine("Ranking:", "italic bold 18px -apple-system, system-ui, sans-serif");
 
       if (rankingPlayers.length === 0) {
-        ctx.fillText("Sem posições definidas.", leftX, y);
+        measureLine("Sem posições definidas.", "16px -apple-system, system-ui, sans-serif");
+      } else {
+        rankingPlayers.forEach((p) => {
+          const place = p.placement;
+          let icon = "";
+          if (place === "1") icon = "🥇";
+          else if (place === "2") icon = "🥈";
+          else if (place === "3") icon = "🥉";
+          else icon = place + "º";
+
+          const name = getDisplayName(p);
+          const placePrize =
+            place === "1" ? prizeCache.p1 :
+            place === "2" ? prizeCache.p2 :
+            place === "3" ? prizeCache.p3 : 0;
+          const resultado = placePrize - p.totalSpent;
+
+          let resultText;
+          if (resultado > 0) {
+            resultText = `Resultado: + ${formatMoney(Math.abs(resultado))}`;
+          } else if (resultado < 0) {
+            resultText = `Resultado: - ${formatMoney(Math.abs(resultado))}`;
+          } else {
+            resultText = `Resultado: ${formatMoney(0)}`;
+          }
+
+          const basePrefix =
+            icon + " " + name + " – Prêmio: " + formatMoney(placePrize) + " ( ";
+          const fullLine = basePrefix + resultText + " )";
+          measureLine(fullLine, "16px -apple-system, system-ui, sans-serif");
+        });
+      }
+
+      totalLines++; // espaço antes de "Resultados detalhados:"
+      measureLine("Resultados detalhados:", "italic bold 18px -apple-system, system-ui, sans-serif");
+
+      if (summaryPlayers.length === 0) {
+        measureLine("Nenhum jogador com Buy-In registrado.", "16px -apple-system, system-ui, sans-serif");
+      } else {
+        summaryPlayers.forEach((p) => {
+          const name = getDisplayName(p);
+          const totalBuyInValue = p.buyIns * buyInValue;
+          const totalRebuyValue = p.rebuys * rebuyValue;
+          const totalAddOnValue = p.addOns * addOnValue;
+          const placePrize =
+            p.placement === "1" ? prizeCache.p1 :
+            p.placement === "2" ? prizeCache.p2 :
+            p.placement === "3" ? prizeCache.p3 : 0;
+          const resultado = placePrize - p.totalSpent;
+
+          let prefixText =
+            name +
+            " - BI: " + p.buyIns + " (" + formatMoney(totalBuyInValue) + ")" +
+            " | RB: " + p.rebuys + " (" + formatMoney(totalRebuyValue) + ")" +
+            " | AD: " + p.addOns + " (" + formatMoney(totalAddOnValue) + ")" +
+            " | Gasto: " + formatMoney(p.totalSpent);
+
+          if (placePrize > 0) {
+            prefixText += " | Prêmio: " + formatMoney(placePrize);
+          }
+
+          let resultSegment;
+          if (resultado > 0) {
+            resultSegment = " | Resultado: + " + formatMoney(Math.abs(resultado));
+          } else if (resultado < 0) {
+            resultSegment = " | Resultado: - " + formatMoney(Math.abs(resultado));
+          } else {
+            resultSegment = " | Resultado: " + formatMoney(0);
+          }
+
+          const fullLine = prefixText + resultSegment;
+          measureLine(fullLine, "16px -apple-system, system-ui, sans-serif");
+        });
+      }
+
+      const width = leftX + maxTextWidth + rightMargin;
+      const height = topMargin + totalLines * lineHeight + bottomMargin;
+
+      summaryCanvas.width = width;
+      summaryCanvas.height = height;
+
+      // ---------- PASSO 2: DESENHAR COM O TAMANHO OTIMIZADO ----------
+      const ctx2 = summaryCanvas.getContext("2d");
+      ctx2.fillStyle = "#ffffff";
+      ctx2.fillRect(0, 0, width, height);
+
+      let y = topMargin;
+
+      ctx2.fillStyle = "#111111";
+      ctx2.font = "28px -apple-system, system-ui, sans-serif";
+      ctx2.fillText(title, leftX, y);
+      y += lineHeight + 10;
+
+      ctx2.font = "bold 18px -apple-system, system-ui, sans-serif";
+      ctx2.fillStyle = "#007aff";
+      ctx2.fillText(`Pote Total: ${formatMoney(totalPot)}`, leftX, y);
+      y += lineHeight + 6;
+
+      ctx2.font = "18px -apple-system, system-ui, sans-serif";
+      ctx2.fillStyle = "#34a3dc";
+      ctx2.fillText(resumoArrecText, leftX, y);
+      y += lineHeight + 10;
+
+      ctx2.font = "italic bold 18px -apple-system, system-ui, sans-serif";
+      ctx2.fillStyle = "#111111";
+      ctx2.fillText("Ranking:", leftX, y);
+      y += lineHeight;
+
+      ctx2.font = "16px -apple-system, system-ui, sans-serif";
+
+      if (rankingPlayers.length === 0) {
+        ctx2.fillText("Sem posições definidas.", leftX, y);
         y += lineHeight;
       } else {
         rankingPlayers.forEach((p) => {
@@ -1489,9 +1577,9 @@
 
           const basePrefix =
             icon + " " + name + " – Prêmio: " + formatMoney(placePrize) + " ( ";
-          ctx.fillStyle = lineColor;
-          ctx.fillText(basePrefix, leftX, y);
-          const prefixWidth = ctx.measureText(basePrefix).width;
+          ctx2.fillStyle = lineColor;
+          ctx2.fillText(basePrefix, leftX, y);
+          const prefixWidth = ctx2.measureText(basePrefix).width;
 
           let resultText;
           let resultColor = "#111111";
@@ -1505,27 +1593,27 @@
             resultText = `Resultado: ${formatMoney(0)}`;
           }
 
-          ctx.fillStyle = resultColor;
-          ctx.fillText(resultText, leftX + prefixWidth, y);
-          const resultWidth = ctx.measureText(resultText).width;
+          ctx2.fillStyle = resultColor;
+          ctx2.fillText(resultText, leftX + prefixWidth, y);
+          const resultWidth = ctx2.measureText(resultText).width;
 
-          ctx.fillStyle = lineColor;
-          ctx.fillText(" )", leftX + prefixWidth + resultWidth, y);
+          ctx2.fillStyle = lineColor;
+          ctx2.fillText(" )", leftX + prefixWidth + resultWidth, y);
 
           y += lineHeight;
         });
       }
 
       y += 10;
-      ctx.font = "italic bold 18px -apple-system, system-ui, sans-serif";
-      ctx.fillStyle = "#111111";
-      ctx.fillText("Resultados detalhados:", leftX, y);
+      ctx2.font = "italic bold 18px -apple-system, system-ui, sans-serif";
+      ctx2.fillStyle = "#111111";
+      ctx2.fillText("Resultados detalhados:", leftX, y);
       y += lineHeight;
 
-      ctx.font = "16px -apple-system, system-ui, sans-serif";
+      ctx2.font = "16px -apple-system, system-ui, sans-serif";
 
       if (summaryPlayers.length === 0) {
-        ctx.fillText("Nenhum jogador com Buy-In registrado.", leftX, y);
+        ctx2.fillText("Nenhum jogador com Buy-In registrado.", leftX, y);
       } else {
         summaryPlayers.forEach((p) => {
           const name = getDisplayName(p);
@@ -1565,12 +1653,12 @@
             resultSegment = " | Resultado: " + formatMoney(0);
           }
 
-          ctx.fillStyle = isWinner ? lineColor : "#111111";
-          ctx.fillText(prefixText, leftX, y);
-          const prefixWidth = ctx.measureText(prefixText).width;
+          ctx2.fillStyle = isWinner ? lineColor : "#111111";
+          ctx2.fillText(prefixText, leftX, y);
+          const prefixWidth = ctx2.measureText(prefixText).width;
 
-          ctx.fillStyle = resultColor;
-          ctx.fillText(resultSegment, leftX + prefixWidth, y);
+          ctx2.fillStyle = resultColor;
+          ctx2.fillText(resultSegment, leftX + prefixWidth, y);
 
           y += lineHeight;
         });
