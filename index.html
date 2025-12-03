@@ -88,7 +88,6 @@
       transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
 
-    /* Títulos principais dos “bubbles” */
     .card-title {
       font-size: 17px;
       font-weight: 600;
@@ -101,7 +100,6 @@
       width: 100%;
     }
 
-    /* Subtítulos: Arrecadação, Prêmios, Ranking, Resultados detalhados */
     .card-title.sub-title {
       font-size: 14px;
       font-weight: 600;
@@ -149,7 +147,7 @@
 
     .player-head {
       display: grid;
-      grid-template-columns: 1.3fr 0.9fr 0.9fr 1.1fr 0.7fr;
+      grid-template-columns: 1.3fr 0.9fr 0.9fr 0.7fr 1.0fr 0.7fr;
       gap: 6px;
       font-size: 11px;
       font-weight: 600;
@@ -166,7 +164,7 @@
 
     .player-row {
       display: grid;
-      grid-template-columns: 1.3fr 0.9fr 0.9fr 1.1fr 0.7fr;
+      grid-template-columns: 1.3fr 0.9fr 0.9fr 0.7fr 1.0fr 0.7fr;
       gap: 6px;
       align-items: center;
       margin-bottom: 6px;
@@ -214,6 +212,15 @@
       font-size: 14px;
       background: #ffffff;
       color: inherit;
+    }
+
+    .addon-cell {
+      text-align: center;
+    }
+
+    .addon-checkbox {
+      width: 18px;
+      height: 18px;
     }
 
     .spent-label {
@@ -316,7 +323,6 @@
       color: #ff3b30;
     }
 
-    /* No ranking, Resultado não é negrito */
     .ranking-item .pay-receive {
       font-weight: 400;
     }
@@ -408,7 +414,7 @@
     @media (max-width: 480px) {
       .player-head,
       .player-row {
-        grid-template-columns: 1.3fr 0.9fr 0.9fr 1.1fr 0.7fr;
+        grid-template-columns: 1.3fr 0.9fr 0.9fr 0.7fr 1.0fr 0.7fr;
       }
     }
 
@@ -481,6 +487,10 @@
           <label for="rebuyChips">Fichas Rebuy</label>
           <input id="rebuyChips" type="text" inputmode="numeric" />
         </div>
+        <div>
+          <label for="addOnChips">Fichas Add-On</label>
+          <input id="addOnChips" type="text" inputmode="numeric" />
+        </div>
       </div>
 
       <div style="margin-top:8px;">
@@ -512,6 +522,7 @@
         <div>Jogador</div>
         <div>Buy-Ins</div>
         <div>Rebuys</div>
+        <div>Add-On</div>
         <div>Total gasto</div>
         <div>Posição</div>
       </div>
@@ -531,6 +542,9 @@
       </div>
       <div class="summary-item">
         <span>Total de Rebuys</span><strong id="totalRebuys">0</strong>
+      </div>
+      <div class="summary-item">
+        <span>Total de Add-Ons</span><strong id="totalAddOns">0</strong>
       </div>
       <div class="total-pot">
         Pote Total: <span id="totalPot">R$ 0,00</span>
@@ -584,7 +598,7 @@
   </footer>
 
   <script>
-    const APP_VERSION = "v1.4.1";
+    const APP_VERSION = "v2.0";
     const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
     const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
@@ -631,6 +645,7 @@
           rebuyValue: 50,
           buyInChips: 14000,
           rebuyChips: 12000,
+          addOnChips: 12000,
           prize1: 50,
           prize2: 30,
           prize3: 20
@@ -640,6 +655,7 @@
           name: "",
           buyIns: 0,
           rebuys: 0,
+          addOn: 0,
           placement: ""
         }))
       };
@@ -657,6 +673,7 @@
         parsed.settings.rebuyValue  = toNumber(parsed.settings.rebuyValue, def.rebuyValue);
         parsed.settings.buyInChips  = toNumber(parsed.settings.buyInChips, def.buyInChips);
         parsed.settings.rebuyChips  = toNumber(parsed.settings.rebuyChips, def.rebuyChips);
+        parsed.settings.addOnChips  = toNumber(parsed.settings.addOnChips, def.addOnChips);
         parsed.settings.prize1      = toNumber(parsed.settings.prize1, def.prize1);
         parsed.settings.prize2      = toNumber(parsed.settings.prize2, def.prize2);
         parsed.settings.prize3      = toNumber(parsed.settings.prize3, def.prize3);
@@ -669,10 +686,12 @@
             name: p.name || "",
             buyIns: toNumber(p.buyIns, 0),
             rebuys: toNumber(p.rebuys, 0),
-            placement: p.placement === 1 || p.placement === "1" ? "1"
-                      : p.placement === 2 || p.placement === "2" ? "2"
-                      : p.placement === 3 || p.placement === "3" ? "3"
-                      : ""
+            addOn: p.addOn ? 1 : 0,
+            placement:
+              p.placement === 1 || p.placement === "1" ? "1" :
+              p.placement === 2 || p.placement === "2" ? "2" :
+              p.placement === 3 || p.placement === "3" ? "3" :
+              ""
           }));
         }
         return parsed;
@@ -719,6 +738,7 @@
     const rebuyInput = document.getElementById("rebuyValue");
     const buyInChipsInput = document.getElementById("buyInChips");
     const rebuyChipsInput = document.getElementById("rebuyChips");
+    const addOnChipsInput = document.getElementById("addOnChips");
     const prize1Input = document.getElementById("prize1");
     const prize2Input = document.getElementById("prize2");
     const prize3Input = document.getElementById("prize3");
@@ -727,6 +747,7 @@
 
     const totalBuyInsEl = document.getElementById("totalBuyIns");
     const totalRebuysEl = document.getElementById("totalRebuys");
+    const totalAddOnsEl = document.getElementById("totalAddOns");
     const totalPotEl = document.getElementById("totalPot");
     const prize1AmountEl = document.getElementById("prize1Amount");
     const prize2AmountEl = document.getElementById("prize2Amount");
@@ -778,6 +799,7 @@
       rebuyInput.value = state.settings.rebuyValue;
       buyInChipsInput.value = formatInt(state.settings.buyInChips);
       rebuyChipsInput.value = formatInt(state.settings.rebuyChips);
+      addOnChipsInput.value = formatInt(state.settings.addOnChips);
       prize1Input.value = state.settings.prize1;
       prize2Input.value = state.settings.prize2;
       prize3Input.value = state.settings.prize3;
@@ -802,7 +824,10 @@
       const rebuyValue = toNumber(state.settings.rebuyValue);
 
       return state.players.map((p, index) => {
-        const totalSpent = p.buyIns * buyInValue + p.rebuys * rebuyValue;
+        const totalSpent =
+          p.buyIns * buyInValue +
+          p.rebuys * rebuyValue +
+          (p.addOn ? 1 : 0) * buyInValue; // Add-On usa valor do Buy-In
         return { ...p, index, totalSpent };
       });
     }
@@ -909,10 +934,13 @@
           const lineColor = getPlacementColor(p.placement);
           const isWinner = p.placement === "1" || p.placement === "2" || p.placement === "3";
 
+          const addOnText = p.addOn ? " | Add-On: Sim" : "";
+
           const prefixText =
             `${namePlain} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) ` +
-            `| RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) ` +
-            `| Gasto: ${formatMoney(p.totalSpent)}`;
+            `| RB: ${p.rebuys} (${formatMoney(totalRebuyValue)})` +
+            `${addOnText}` +
+            ` | Gasto: ${formatMoney(p.totalSpent)}`;
 
           let premioText = "";
           if (placePrize > 0) {
@@ -1023,6 +1051,20 @@
         rebuyCounter.appendChild(rebuyPlus);
         rebuyDiv.appendChild(rebuyCounter);
 
+        const addOnDiv = document.createElement("div");
+        addOnDiv.className = "addon-cell";
+        const addOnCheckbox = document.createElement("input");
+        addOnCheckbox.type = "checkbox";
+        addOnCheckbox.className = "addon-checkbox";
+        addOnCheckbox.checked = !!p.addOn;
+        addOnCheckbox.addEventListener("change", () => {
+          state.players[p.index].addOn = addOnCheckbox.checked ? 1 : 0;
+          saveState(state);
+          renderPlayers();
+          recalc();
+        });
+        addOnDiv.appendChild(addOnCheckbox);
+
         const spentDiv = document.createElement("div");
         const spentLabel = document.createElement("div");
         spentLabel.className = "spent-label";
@@ -1078,6 +1120,7 @@
         row.appendChild(nameDiv);
         row.appendChild(buyDiv);
         row.appendChild(rebuyDiv);
+        row.appendChild(addOnDiv);
         row.appendChild(spentDiv);
         row.appendChild(posDiv);
         playersContainer.appendChild(row);
@@ -1121,19 +1164,24 @@
 
       let totalBuyIns = 0;
       let totalRebuys = 0;
+      let totalAddOns = 0;
       state.players.forEach((p) => {
         totalBuyIns += toNumber(p.buyIns);
         totalRebuys += toNumber(p.rebuys);
+        totalAddOns += p.addOn ? 1 : 0;
       });
 
       const totalFromBuyIns = totalBuyIns * buyInValue;
       const totalFromRebuys = totalRebuys * rebuyValue;
-      const totalPot = totalFromBuyIns + totalFromRebuys;
+      const totalFromAddOns = totalAddOns * buyInValue;
+      const totalPot = totalFromBuyIns + totalFromRebuys + totalFromAddOns;
 
       totalBuyInsEl.innerHTML =
         `${totalBuyIns} (<span class="money-blue">${formatMoney(totalFromBuyIns)}</span>)`;
       totalRebuysEl.innerHTML =
         `${totalRebuys} (<span class="money-blue">${formatMoney(totalFromRebuys)}</span>)`;
+      totalAddOnsEl.innerHTML =
+        `${totalAddOns} (<span class="money-blue">${formatMoney(totalFromAddOns)}</span>)`;
       totalPotEl.textContent = formatMoney(totalPot);
 
       const p1 = toNumber(state.settings.prize1);
@@ -1168,9 +1216,11 @@
 
       let totalBuyIns = 0;
       let totalRebuys = 0;
+      let totalAddOns = 0;
       state.players.forEach((p) => {
         totalBuyIns += toNumber(p.buyIns);
         totalRebuys += toNumber(p.rebuys);
+        totalAddOns += p.addOn ? 1 : 0;
       });
 
       const totalPot = prizeCache.totalPot;
@@ -1201,7 +1251,8 @@
       lines.push(`Pote Total: ${formatMoney(totalPot)}`);
       lines.push(
         `Buy-Ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
-        `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)})`
+        `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)}) · ` +
+        `Add-Ons: ${totalAddOns} (${formatMoney(totalAddOns * buyInValue)})`
       );
       lines.push("");
 
@@ -1259,6 +1310,8 @@
             p.placement === "3" ? prizeCache.p3 : 0;
           const resultado = placePrize - p.totalSpent;
 
+          const addOnText = p.addOn ? " | Add-On: Sim" : "";
+
           let premioText = "";
           if (placePrize > 0) {
             premioText = ` | Prêmio: ${formatMoney(placePrize)}`;
@@ -1275,8 +1328,9 @@
 
           lines.push(
             `${name} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
-            `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
-            `Gasto: ${formatMoney(p.totalSpent)}` +
+            `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)})` +
+            `${addOnText}` +
+            ` | Gasto: ${formatMoney(p.totalSpent)}` +
             `${premioText}` +
             `${resultadoText}`
           );
@@ -1321,9 +1375,11 @@
 
       let totalBuyIns = 0;
       let totalRebuys = 0;
+      let totalAddOns = 0;
       state.players.forEach((p) => {
         totalBuyIns += toNumber(p.buyIns);
         totalRebuys += toNumber(p.rebuys);
+        totalAddOns += p.addOn ? 1 : 0;
       });
 
       const totalPot = prizeCache.totalPot;
@@ -1339,7 +1395,8 @@
       ctx.font = "18px -apple-system, system-ui, sans-serif";
       ctx.fillText(
         `Buy-Ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
-        `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)})`,
+        `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)}) · ` +
+        `Add-Ons: ${totalAddOns} (${formatMoney(totalAddOns * buyInValue)})`,
         40,
         y
       );
@@ -1443,10 +1500,13 @@
           const lineColor = getPlacementColor(p.placement);
           const isWinner = p.placement === "1" || p.placement === "2" || p.placement === "3";
 
+          const addOnText = p.addOn ? " | Add-On: Sim" : "";
+
           const baseText =
             name +
             " - BI: " + p.buyIns + " (" + formatMoney(totalBuyInValue) + ")" +
             " | RB: " + p.rebuys + " (" + formatMoney(totalRebuyValue) + ")" +
+            addOnText +
             " | Gasto: " + formatMoney(p.totalSpent);
 
           let prefixText = baseText;
@@ -1518,40 +1578,9 @@
     rebuyChipsInput.addEventListener("change", () => {
       handleChipsInput(rebuyChipsInput, "rebuyChips");
     });
-
-    function updatePrizeSetting() {
-      state.settings.prize1 = toNumber(prize1Input.value, 0);
-      state.settings.prize2 = toNumber(prize2Input.value, 0);
-      state.settings.prize3 = toNumber(prize3Input.value, 0);
-      saveState(state);
-      updatePrizeSumWarning();
-      recalc();
-    }
-
-    prize1Input.addEventListener("change", updatePrizeSetting);
-    prize2Input.addEventListener("change", updatePrizeSetting);
-    prize3Input.addEventListener("change", updatePrizeSetting);
-
-    document.getElementById("resetSession").addEventListener("click", () => {
-      if (!confirm("Zerar todos os jogadores e configurações?")) return;
-      state = defaultState();
-      saveState(state);
-      renderSettings();
-      renderPlayers();
-      recalc();
+    addOnChipsInput.addEventListener("change", () => {
+      handleChipsInput(addOnChipsInput, "addOnChips");
     });
 
-    renderSettings();
-    renderPlayers();
-    recalc();
-
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker
-          .register("sw.js?v=" + APP_VERSION)
-          .catch((err) => console.error("SW registration failed", err));
-      });
-    }
-  </script>
-</body>
-</html>
+    function updatePrizeSetting() {
+      state.settings.prize1 = toNumber(prize1Input.value,
