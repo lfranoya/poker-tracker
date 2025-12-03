@@ -5,17 +5,17 @@
   <title>Poker Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- PWA manifest -->
+  <!-- PWA -->
   <link rel="manifest" href="manifest.webmanifest" />
   <meta name="theme-color" content="#ffffff" />
 
-  <!-- iOS specific -->
+  <!-- iOS -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Poker Tracker" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
 
-  <!-- Android / Chrome PWA helpers -->
+  <!-- Android / Chrome -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="application-name" content="Poker Tracker" />
 
@@ -119,6 +119,9 @@
       display: block;
       margin-bottom: 4px;
       color: #555;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
     input[type="number"],
@@ -153,7 +156,7 @@
       min-width: 90px;
     }
 
-    /* NOVO: grid estável para Configurações do Jogo */
+    /* Grid estável para Configurações do Jogo */
     .config-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -161,13 +164,24 @@
       margin-bottom: 8px;
     }
 
+    .config-grid > div {
+      min-width: 0;
+    }
+
     .player-head {
       display: grid;
-      grid-template-columns: 1.3fr 0.8fr 0.8fr 0.8fr 1.1fr 0.7fr;
+      grid-template-columns:
+        1.4fr   /* Jogador      */
+        80px    /* Buy-In       */
+        80px    /* Rebuys       */
+        80px    /* Add-On       */
+        100px   /* Total        */
+        90px;   /* Posição      */
       gap: 4px;
       font-size: 11px;
       font-weight: 600;
       margin-bottom: 6px;
+      align-items: center;
     }
 
     .player-head div {
@@ -180,7 +194,13 @@
 
     .player-row {
       display: grid;
-      grid-template-columns: 1.3fr 0.8fr 0.8fr 0.8fr 1.1fr 0.7fr;
+      grid-template-columns:
+        1.4fr
+        80px
+        80px
+        80px
+        100px
+        90px;
       gap: 4px;
       align-items: center;
       margin-bottom: 8px;
@@ -200,27 +220,43 @@
       background: rgba(52,199,89,0.08);
     }
 
-    .counter {
+    .cell-center {
       display: flex;
-      align-items: center;
-      gap: 6px;
       justify-content: center;
+      align-items: center;
+      min-width: 0;
     }
 
-    .counter button {
-      width: 34px;
-      height: 34px;
+    .cell-total {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .counter {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .counter-btn {
+      width: 32px;
+      height: 32px;
       border-radius: 8px;
       border: none;
-      font-size: 20px;
-      font-weight: 600;
+      font-size: 18px;
+      font-weight: 700;
       background: #f2f2f7;
       cursor: pointer;
       padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .counter input {
-      width: 52px;
+    .counter-input {
+      width: 40px;
       text-align: center;
       padding: 5px;
       border-radius: 6px;
@@ -233,8 +269,7 @@
     .spent-label {
       font-size: 14px;
       text-align: center;
-      padding-right: 4px;
-      min-width: 80px;
+      min-width: 0;
     }
 
     .position-select {
@@ -381,7 +416,7 @@
       color: #f5f5f5;
     }
 
-    body.dark .counter button {
+    body.dark .counter-btn {
       background: #2c2c2e;
       color: #f5f5f5;
     }
@@ -430,14 +465,38 @@
         padding: 12px;
         margin-bottom: 16px;
       }
-      .player-head,
+      .player-head {
+        font-size: 10px;
+      }
       .player-row {
-        grid-template-columns: 1.3fr 0.8fr 0.8fr 0.8fr 1.1fr 0.7fr;
+        font-size: 13px;
+        gap: 4px;
       }
-      .counter button {
+      .counter-btn {
+        width: 30px;
+        height: 30px;
+      }
+      .counter-input {
         width: 36px;
-        height: 36px;
       }
+    }
+
+    /* Modo mais compacto para telas bem estreitas */
+    @media (max-width: 380px) {
+      .player-head {
+        display: none;
+      }
+      .player-row {
+        grid-template-columns: 1.8fr 1.2fr;
+        grid-template-rows: auto auto;
+        grid-row-gap: 4px;
+      }
+      .player-row > div:nth-child(1) { grid-column: 1 / 2; grid-row: 1; }
+      .player-row > div:nth-child(6) { grid-column: 2 / 3; grid-row: 1; } /* posição */
+      .player-row > div:nth-child(2) { grid-column: 1 / 2; grid-row: 2; }
+      .player-row > div:nth-child(3) { grid-column: 2 / 3; grid-row: 2; }
+      .player-row > div:nth-child(4) { display: none; } /* esconde Add-On em modo ultra compacto se ficar muito apertado */
+      .player-row > div:nth-child(5) { display: none; } /* esconde total em modo ultra compacto */
     }
 
     .ranking-list {
@@ -487,21 +546,21 @@
   </header>
 
   <main>
-    <!-- Configurações -->
+    <!-- Configurações do Jogo -->
     <section class="card">
       <div class="card-title">Configurações do Jogo</div>
 
       <div class="config-grid">
         <div>
-          <label for="buyInValue">Valor do Buy-In (R$)</label>
+          <label for="buyInValue">Buy-In (R$)</label>
           <input id="buyInValue" type="text" inputmode="decimal" />
         </div>
         <div>
-          <label for="rebuyValue">Valor do Rebuy (R$)</label>
+          <label for="rebuyValue">Rebuy (R$)</label>
           <input id="rebuyValue" type="text" inputmode="decimal" />
         </div>
         <div>
-          <label for="addOnValue">Valor do Add-On (R$)</label>
+          <label for="addOnValue">Add-On (R$)</label>
           <input id="addOnValue" type="text" inputmode="decimal" />
         </div>
       </div>
@@ -543,7 +602,7 @@
       <button id="resetSession" class="btn btn-danger">Zerar rodada</button>
     </section>
 
-    <!-- Controle do jogo -->
+    <!-- Controle do Jogo -->
     <section class="card">
       <div class="card-title">Controle do Jogo</div>
       <div class="player-head">
@@ -551,7 +610,7 @@
         <div>Buy-In</div>
         <div>Rebuys</div>
         <div>Add-On</div>
-        <div>Total gasto</div>
+        <div>Total</div>
         <div>Posição</div>
       </div>
       <div id="playersContainer"></div>
@@ -560,7 +619,7 @@
       </div>
     </section>
 
-    <!-- VALORES -->
+    <!-- Valores -->
     <section class="card">
       <div class="card-title" id="valuesTitle">Valores</div>
 
@@ -575,7 +634,7 @@
         <span>Total de Add-Ons</span><strong id="totalAddOns">0</strong>
       </div>
       <div class="total-pot">
-        Pote Total: <span id="totalPot">R$ 0,00</span>
+        Pote Total: <span id="totalPot">R$ 0</span>
       </div>
 
       <hr class="strong-separator">
@@ -583,19 +642,19 @@
       <div class="card-title sub-title" style="margin-top:4px;font-style:italic;">Prêmios</div>
       <div class="summary-item">
         <span>1º lugar</span>
-        <strong id="prize1Amount">R$ 0,00</strong>
+        <strong id="prize1Amount">R$ 0</strong>
       </div>
       <div class="summary-item">
         <span>2º lugar</span>
-        <strong id="prize2Amount">R$ 0,00</strong>
+        <strong id="prize2Amount">R$ 0</strong>
       </div>
       <div class="summary-item">
         <span>3º lugar</span>
-        <strong id="prize3Amount">R$ 0,00</strong>
+        <strong id="prize3Amount">R$ 0</strong>
       </div>
     </section>
 
-    <!-- RESULTADOS -->
+    <!-- Resultados -->
     <section class="card">
       <div class="card-title" id="resultsTitle">Resultados</div>
 
@@ -608,7 +667,7 @@
       <div id="playersSummaryList" class="ranking-list"></div>
     </section>
 
-    <!-- Botões -->
+    <!-- Compartilhar -->
     <section class="card">
       <div class="card-title">Compartilhar</div>
       <button id="whatsappShareBtn" class="btn btn-whatsapp">
@@ -626,7 +685,7 @@
   </footer>
 
   <script>
-    const APP_VERSION = "v2.4";
+    const APP_VERSION = "v2.5";
     const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
     const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
@@ -637,12 +696,13 @@
       moneyFormatter = new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
-        minimumFractionDigits: 2
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
       });
     } catch (e) {
       moneyFormatter = {
         format(v) {
-          return "R$ " + Number(v).toFixed(2).replace(".", ",");
+          return "R$ " + Math.round(Number(v) || 0);
         }
       };
     }
@@ -749,14 +809,13 @@
     }
 
     function getDisplayName(p) {
-      const base = (p.name && p.name.trim()) || ("Jogador " + (p.index + 1));
-      return base;
+      return (p.name && p.name.trim()) || ("Jogador " + (p.index + 1));
     }
 
     function getPlacementColor(placement) {
-      if (placement === "1") return "#34c759";
-      if (placement === "2") return "#ff9500";
-      if (placement === "3") return "#007aff";
+      if (placement === "1") return "#34c759"; // verde
+      if (placement === "2") return "#ff9500"; // laranja
+      if (placement === "3") return "#007aff"; // azul
       return "#111111";
     }
 
@@ -914,8 +973,6 @@
             p.placement === "3" ? prizeCache.p3 : 0;
           const resultado = placePrize - p.totalSpent;
 
-          right.style.color = lineColor;
-
           let resultSpan;
           if (resultado > 0) {
             resultSpan =
@@ -928,6 +985,7 @@
               `<span class="pay-receive">Resultado: ${formatMoney(0)}</span>`;
           }
 
+          right.style.color = lineColor;
           right.innerHTML =
             `Prêmio: ${formatMoney(placePrize)} ( ${resultSpan} )`;
 
@@ -1029,6 +1087,7 @@
           row.classList.add("smallest");
         }
 
+        // Jogador
         const nameDiv = document.createElement("div");
         const nameInput = document.createElement("input");
         nameInput.type = "text";
@@ -1041,22 +1100,25 @@
         });
         nameDiv.appendChild(nameInput);
 
+        // Buy-In
         const buyDiv = document.createElement("div");
+        buyDiv.className = "cell-center";
         const buyCounter = document.createElement("div");
         buyCounter.className = "counter";
 
         const buyMinus = document.createElement("button");
+        buyMinus.className = "counter-btn";
         buyMinus.textContent = "–";
 
         const buyInput = document.createElement("input");
+        buyInput.className = "counter-input";
         buyInput.type = "text";
         buyInput.inputMode = "numeric";
         buyInput.pattern = "[0-9]*";
-        buyInput.min = "0";
-        buyInput.step = "1";
         buyInput.value = p.buyIns;
 
         const buyPlus = document.createElement("button");
+        buyPlus.className = "counter-btn";
         buyPlus.textContent = "+";
 
         buyCounter.appendChild(buyMinus);
@@ -1064,22 +1126,25 @@
         buyCounter.appendChild(buyPlus);
         buyDiv.appendChild(buyCounter);
 
+        // Rebuy
         const rebuyDiv = document.createElement("div");
+        rebuyDiv.className = "cell-center";
         const rebuyCounter = document.createElement("div");
         rebuyCounter.className = "counter";
 
         const rebuyMinus = document.createElement("button");
+        rebuyMinus.className = "counter-btn";
         rebuyMinus.textContent = "–";
 
         const rebuyInput = document.createElement("input");
+        rebuyInput.className = "counter-input";
         rebuyInput.type = "text";
         rebuyInput.inputMode = "numeric";
         rebuyInput.pattern = "[0-9]*";
-        rebuyInput.min = "0";
-        rebuyInput.step = "1";
         rebuyInput.value = p.rebuys;
 
         const rebuyPlus = document.createElement("button");
+        rebuyPlus.className = "counter-btn";
         rebuyPlus.textContent = "+";
 
         rebuyCounter.appendChild(rebuyMinus);
@@ -1087,22 +1152,25 @@
         rebuyCounter.appendChild(rebuyPlus);
         rebuyDiv.appendChild(rebuyCounter);
 
+        // Add-On
         const addOnDiv = document.createElement("div");
+        addOnDiv.className = "cell-center";
         const addOnCounter = document.createElement("div");
         addOnCounter.className = "counter";
 
         const addOnMinus = document.createElement("button");
+        addOnMinus.className = "counter-btn";
         addOnMinus.textContent = "–";
 
         const addOnInput = document.createElement("input");
+        addOnInput.className = "counter-input";
         addOnInput.type = "text";
         addOnInput.inputMode = "numeric";
         addOnInput.pattern = "[0-9]*";
-        addOnInput.min = "0";
-        addOnInput.step = "1";
         addOnInput.value = p.addOns || 0;
 
         const addOnPlus = document.createElement("button");
+        addOnPlus.className = "counter-btn";
         addOnPlus.textContent = "+";
 
         addOnCounter.appendChild(addOnMinus);
@@ -1110,12 +1178,15 @@
         addOnCounter.appendChild(addOnPlus);
         addOnDiv.appendChild(addOnCounter);
 
+        // Total
         const spentDiv = document.createElement("div");
+        spentDiv.className = "cell-total";
         const spentLabel = document.createElement("div");
         spentLabel.className = "spent-label";
         spentLabel.textContent = formatMoney(p.totalSpent);
         spentDiv.appendChild(spentLabel);
 
+        // Posição
         const posDiv = document.createElement("div");
         const posSelect = document.createElement("select");
         posSelect.className = "position-select";
@@ -1707,6 +1778,14 @@
       document.body.removeChild(link);
     });
 
+    function handleChipsInput(inputEl, key) {
+      const raw = inputEl.value;
+      const num = toNumber(raw, 0);
+      state.settings[key] = num;
+      inputEl.value = formatInt(num);
+      saveState(state);
+    }
+
     buyInInput.addEventListener("change", () => {
       state.settings.buyInValue = toNumber(buyInInput.value, 0);
       saveState(state);
@@ -1727,14 +1806,6 @@
       renderPlayers();
       recalc();
     });
-
-    function handleChipsInput(inputEl, key) {
-      const raw = inputEl.value;
-      const num = toNumber(raw, 0);
-      state.settings[key] = num;
-      inputEl.value = formatInt(num);
-      saveState(state);
-    }
 
     buyInChipsInput.addEventListener("change", () => {
       handleChipsInput(buyInChipsInput, "buyInChips");
