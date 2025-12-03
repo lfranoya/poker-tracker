@@ -88,23 +88,25 @@
       transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
     }
 
+    /* Títulos principais dos “bubbles” */
     .card-title {
-      font-size: 16px;
+      font-size: 17px;          /* +1 vs antes */
       font-weight: 600;
       margin-bottom: 8px;
       display: flex;
       align-items: baseline;
       gap: 6px;
-    }
-
-    .card-title.center {
       justify-content: center;
       text-align: center;
       width: 100%;
     }
 
-    .control-title {
-      justify-content: center;
+    /* Subtítulos: Arrecadação, Prêmios, Ranking, Resultados detalhados */
+    .card-title.sub-title {
+      font-size: 14px;          /* 1pt menor que os principais */
+      font-weight: 600;
+      justify-content: flex-start;
+      text-align: left;
     }
 
     label {
@@ -236,16 +238,16 @@
       font-weight: 600;
     }
 
-    /* swapped colors: parentheses vs Pote Total */
+    /* cores trocadas: parênteses vs Pote Total */
     .money-blue {
-      color: #34a3dc; /* agora cor "cool" das linhas */
+      color: #34a3dc;
     }
 
     .total-pot {
       font-size: 16px;
       font-weight: 600;
       margin-top: 6px;
-      color: #007aff; /* Pote Total agora nesse azul */
+      color: #007aff;
     }
 
     .btn {
@@ -264,7 +266,6 @@
       margin-top: 8px;
     }
 
-    /* Botão WhatsApp */
     .btn-whatsapp {
       background: #25d366;
       color: #ffffff;
@@ -280,7 +281,6 @@
       font-size: 18px;
     }
 
-    /* Botão Card laranja */
     .btn-card {
       background: #ff9500;
       color: #ffffff;
@@ -307,7 +307,6 @@
       color: #666;
     }
 
-    /* Resultado (+ / -) */
     .pay-receive {
       font-weight: 600;
     }
@@ -318,28 +317,30 @@
       color: #ff3b30;
     }
 
-    /* Destaque para nomes premiados */
+    /* No ranking, Resultado não é negrito */
+    .ranking-item .pay-receive {
+      font-weight: 400;
+    }
+
     .player-name {
       font-weight: 600;
     }
     .player-name-1 {
-      color: #34c759;  /* verde */
+      color: #34c759;
     }
     .player-name-2 {
-      color: #ff9500;  /* laranja */
+      color: #ff9500;
     }
     .player-name-3 {
-      color: #007aff;  /* azul para 3º */
+      color: #007aff;
     }
 
-    /* Linhas de separação agora finas e cinza claro */
     .strong-separator {
       margin: 12px 0 8px;
       border: none;
       border-top: 1px solid #cccccc;
     }
 
-    /* Dark mode */
     body.dark {
       background: #111111;
       color: #f5f5f5;
@@ -412,7 +413,6 @@
       }
     }
 
-    /* Listas de ranking / resumo */
     .ranking-list {
       margin-top: 8px;
       font-size: 14px;
@@ -445,7 +445,6 @@
       text-align: left;
     }
 
-    /* Canvas (card PNG) */
     #summaryCanvas {
       display: none;
     }
@@ -477,16 +476,16 @@
       <div class="row">
         <div>
           <label for="buyInChips">Fichas Buy-In</label>
-          <input id="buyInChips" type="number" min="0" step="1" inputmode="numeric" />
+          <input id="buyInChips" type="text" inputmode="numeric" />
         </div>
         <div>
           <label for="rebuyChips">Fichas Rebuy</label>
-          <input id="rebuyChips" type="number" min="0" step="1" inputmode="numeric" />
+          <input id="rebuyChips" type="text" inputmode="numeric" />
         </div>
       </div>
 
       <div style="margin-top:8px;">
-        <div class="card-title" style="font-size:14px;margin-bottom:4px;">Distribuição de prêmios (%)</div>
+        <div class="card-title sub-title" style="margin-bottom:4px;">Distribuição de prêmios (%)</div>
         <div class="row">
           <div>
             <label for="prize1">1º lugar</label>
@@ -509,7 +508,7 @@
 
     <!-- Controle do jogo -->
     <section class="card">
-      <div class="card-title control-title">Controle do Jogo</div>
+      <div class="card-title">Controle do Jogo</div>
       <div class="player-head">
         <div>Jogador</div>
         <div>Buy-Ins</div>
@@ -525,8 +524,9 @@
 
     <!-- VALORES -->
     <section class="card">
-      <div class="card-title center" id="valuesTitle">VALORES</div>
+      <div class="card-title" id="valuesTitle">Valores</div>
 
+      <div class="card-title sub-title">Arrecadação</div>
       <div class="summary-item">
         <span>Total de Buy-Ins</span><strong id="totalBuyIns">0</strong>
       </div>
@@ -537,11 +537,9 @@
         Pote Total: <span id="totalPot">R$ 0,00</span>
       </div>
 
-      <!-- Linha entre Pote Total e PRÊMIOS -->
       <hr class="strong-separator">
 
-      <!-- PRÊMIOS (somente valores, sem nomes/ícones/resultado) -->
-      <div class="card-title" style="margin-top:4px;">PRÊMIOS</div>
+      <div class="card-title sub-title" style="margin-top:4px;">Prêmios</div>
       <div class="summary-item">
         <span>1º lugar</span>
         <strong id="prize1Amount">R$ 0,00</strong>
@@ -558,28 +556,26 @@
 
     <!-- RESULTADOS (Ranking + Resultados detalhados) -->
     <section class="card">
-      <div class="card-title center" id="resultsTitle">RESULTADOS</div>
+      <div class="card-title" id="resultsTitle">Resultados</div>
 
-      <div class="card-title" style="font-style:italic;margin-top:4px;">RANKING</div>
+      <div class="card-title sub-title" style="font-style:italic;margin-top:4px;">Ranking</div>
       <div id="rankingList" class="ranking-list"></div>
 
-      <!-- Linha entre Ranking e Resultados detalhados -->
       <hr class="strong-separator">
 
-      <div class="card-title" style="font-style:italic;margin-top:4px;">RESULTADOS DETALHADOS</div>
+      <div class="card-title sub-title" style="font-style:italic;margin-top:4px;">Resultados detalhados</div>
       <div id="playersSummaryList" class="ranking-list"></div>
     </section>
 
-    <!-- Botões (WhatsApp + Card) em bubble separado -->
+    <!-- Botões -->
     <section class="card">
-      <div class="card-title center">Compartilhar</div>
+      <div class="card-title">Compartilhar</div>
       <button id="whatsappShareBtn" class="btn btn-whatsapp">
         <span class="wa-icon">🟢</span>
         <span>Enviar WhatsApp</span>
       </button>
       <button id="pngCardBtn" class="btn btn-card">Gerar Card</button>
 
-      <!-- Canvas escondido para gerar o card PNG -->
       <canvas id="summaryCanvas" width="900" height="700"></canvas>
     </section>
   </main>
@@ -589,19 +585,12 @@
   </footer>
 
   <script>
-    const APP_VERSION = "v1.3";
+    const APP_VERSION = "v1.4";
     const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
     const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
-    // Cache de prêmios para usar em ranking, WhatsApp e card
-    let prizeCache = {
-      totalPot: 0,
-      p1: 0,
-      p2: 0,
-      p3: 0
-    };
+    let prizeCache = { totalPot: 0, p1: 0, p2: 0, p3: 0 };
 
-    // Formatação R$
     let moneyFormatter;
     try {
       moneyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -617,24 +606,32 @@
       };
     }
 
+    const intFormatter = new Intl.NumberFormat("pt-BR", {
+      maximumFractionDigits: 0
+    });
+
     function formatMoney(v) {
       return moneyFormatter.format(v || 0);
     }
 
+    function formatInt(v) {
+      return intFormatter.format(Math.floor(v || 0));
+    }
+
     function toNumber(v, def = 0) {
       if (v === null || v === undefined) return def;
-      const normalized = String(v).replace(",", ".");
-      const n = parseFloat(normalized);
+      const cleaned = String(v).replace(/\./g, "").replace(",", ".");
+      const n = parseFloat(cleaned);
       return isNaN(n) ? def : n;
     }
 
     function defaultState() {
       return {
         settings: {
-          buyInValue: 50,   // default 50
-          rebuyValue: 50,   // default 50
-          buyInChips: 0,
-          rebuyChips: 0,
+          buyInValue: 50,
+          rebuyValue: 50,
+          buyInChips: 14000,
+          rebuyChips: 12000,
           prize1: 50,
           prize2: 30,
           prize3: 20
@@ -696,11 +693,10 @@
 
     let state = loadState();
 
-    // Data de hoje
     function getTodayString() {
       try {
         return new Date().toLocaleDateString("pt-BR");
-      } catch (e) {
+      } catch {
         return "";
       }
     }
@@ -717,7 +713,6 @@
       return "#111111";
     }
 
-    // DOM refs
     const headerTitleEl = document.getElementById("headerTitle");
     const appVersionEl  = document.getElementById("appVersion");
 
@@ -748,15 +743,10 @@
 
     function updateDateLabels() {
       const d = getTodayString();
-      if (headerTitleEl) {
-        headerTitleEl.textContent = d ? "Poker - " + d : "Poker";
-      }
-      if (appVersionEl) {
-        appVersionEl.textContent = APP_VERSION;
-      }
+      headerTitleEl.textContent = d ? "Poker - " + d : "Poker";
+      appVersionEl.textContent = APP_VERSION;
     }
 
-    // Tema
     function applyTheme(theme) {
       if (theme === "dark") {
         document.body.classList.add("dark");
@@ -787,8 +777,8 @@
     function renderSettings() {
       buyInInput.value = state.settings.buyInValue;
       rebuyInput.value = state.settings.rebuyValue;
-      buyInChipsInput.value = state.settings.buyInChips;
-      rebuyChipsInput.value = state.settings.rebuyChips;
+      buyInChipsInput.value = formatInt(state.settings.buyInChips);
+      rebuyChipsInput.value = formatInt(state.settings.rebuyChips);
       prize1Input.value = state.settings.prize1;
       prize2Input.value = state.settings.prize2;
       prize3Input.value = state.settings.prize3;
@@ -825,7 +815,6 @@
       rankingListEl.innerHTML = "";
       playersSummaryListEl.innerHTML = "";
 
-      // Ranking de posições 1,2,3
       const rankingPlayers = playersWithTotalsSorted
         .filter(p => p.placement === "1" || p.placement === "2" || p.placement === "3")
         .sort((a, b) => Number(a.placement) - Number(b.placement));
@@ -868,22 +857,22 @@
             p.placement === "3" ? prizeCache.p3 : 0;
           const resultado = placePrize - p.totalSpent;
 
-          // todo o lado direito na cor da posição, exceto o resultado
           right.style.color = lineColor;
 
+          let resultSpan;
           if (resultado > 0) {
-            right.innerHTML =
-              `Prêmio: ${formatMoney(placePrize)} | ` +
+            resultSpan =
               `<span class="pay-receive pay-receive--positive">Resultado: + ${formatMoney(Math.abs(resultado))}</span>`;
           } else if (resultado < 0) {
-            right.innerHTML =
-              `Prêmio: ${formatMoney(placePrize)} | ` +
+            resultSpan =
               `<span class="pay-receive pay-receive--negative">Resultado: - ${formatMoney(Math.abs(resultado))}</span>`;
           } else {
-            right.innerHTML =
-              `Prêmio: ${formatMoney(placePrize)} | ` +
+            resultSpan =
               `<span class="pay-receive">Resultado: ${formatMoney(0)}</span>`;
           }
+
+          right.innerHTML =
+            `Prêmio: ${formatMoney(placePrize)} ( ${resultSpan} )`;
 
           div.appendChild(left);
           div.appendChild(right);
@@ -891,7 +880,6 @@
         });
       }
 
-      // Resultados detalhados (1+ Buy-In), ordem alfabética por nome
       const summaryPlayers = playersWithTotalsSorted
         .filter(p => p.buyIns >= 1)
         .sort((a, b) => {
@@ -927,7 +915,6 @@
             `| RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) ` +
             `| GASTO: ${formatMoney(p.totalSpent)}`;
 
-          // PRÊMIO só aparece se > 0
           let premioText = "";
           if (placePrize > 0) {
             premioText = ` | PRÊMIO: ${formatMoney(placePrize)}`;
@@ -970,7 +957,6 @@
       const minSpent =
         positiveTotals.length > 0 ? Math.min(...positiveTotals) : 0;
 
-      // Ordena do maior gasto para o menor
       playersWithTotals.sort((a, b) => b.totalSpent - a.totalSpent);
 
       playersWithTotals.forEach((p) => {
@@ -984,7 +970,6 @@
           row.classList.add("smallest");
         }
 
-        // Nome
         const nameDiv = document.createElement("div");
         const nameInput = document.createElement("input");
         nameInput.type = "text";
@@ -997,7 +982,6 @@
         });
         nameDiv.appendChild(nameInput);
 
-        // Buy-Ins
         const buyDiv = document.createElement("div");
         const buyCounter = document.createElement("div");
         buyCounter.className = "counter";
@@ -1019,7 +1003,6 @@
         buyCounter.appendChild(buyPlus);
         buyDiv.appendChild(buyCounter);
 
-        // Rebuys
         const rebuyDiv = document.createElement("div");
         const rebuyCounter = document.createElement("div");
         rebuyCounter.className = "counter";
@@ -1041,14 +1024,12 @@
         rebuyCounter.appendChild(rebuyPlus);
         rebuyDiv.appendChild(rebuyCounter);
 
-        // Total gasto
         const spentDiv = document.createElement("div");
         const spentLabel = document.createElement("div");
         spentLabel.className = "spent-label";
         spentLabel.textContent = formatMoney(p.totalSpent);
         spentDiv.appendChild(spentLabel);
 
-        // Posição (dropdown) com lógica de exclusividade
         const posDiv = document.createElement("div");
         const posSelect = document.createElement("select");
         posSelect.className = "position-select";
@@ -1080,7 +1061,6 @@
           const idx = p.index;
           const newVal = posSelect.value;
 
-          // Exclusividade: se outra pessoa já tinha essa posição, volta para "—"
           if (newVal === "1" || newVal === "2" || newVal === "3") {
             state.players.forEach((pl, i) => {
               if (i !== idx && pl.placement === newVal) {
@@ -1105,14 +1085,8 @@
 
         function updatePlayer(newBuyIns, newRebuys) {
           const idx = p.index;
-          state.players[idx].buyIns = Math.max(
-            0,
-            Math.floor(toNumber(newBuyIns, 0))
-          );
-          state.players[idx].rebuys = Math.max(
-            0,
-            Math.floor(toNumber(newRebuys, 0))
-          );
+          state.players[idx].buyIns = Math.max(0, Math.floor(toNumber(newBuyIns, 0)));
+          state.players[idx].rebuys = Math.max(0, Math.floor(toNumber(newRebuys, 0)));
           saveState(state);
           renderPlayers();
           recalc();
@@ -1157,7 +1131,6 @@
       const totalFromRebuys = totalRebuys * rebuyValue;
       const totalPot = totalFromBuyIns + totalFromRebuys;
 
-      // Totais com valor arrecadado usando cor "cool"
       totalBuyInsEl.innerHTML =
         `${totalBuyIns} (<span class="money-blue">${formatMoney(totalFromBuyIns)}</span>)`;
       totalRebuysEl.innerHTML =
@@ -1174,7 +1147,7 @@
 
       const totalPrizes = prize1Amount + prize2Amount + prize3Amount;
       const diff = totalPot - totalPrizes;
-      prize1Amount += diff; // ajustes de centavos
+      prize1Amount += diff;
 
       prize1AmountEl.textContent = formatMoney(prize1Amount);
       prize2AmountEl.textContent = formatMoney(prize2Amount);
@@ -1188,9 +1161,8 @@
       renderRankingAndSummary(buildPlayersWithTotals().sort((a, b) => b.totalSpent - a.totalSpent));
     }
 
-    // Resumo para WhatsApp (com Buy-In/Rebuy capitalizados e ordem alfabética nos detalhados)
     function buildWhatsappSummary() {
-      recalc(); // garante prêmios atualizados
+      recalc();
 
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
@@ -1309,7 +1281,7 @@
             `${premioText}` +
             `${resultadoText}`
           );
-          lines.push(""); // linha em branco entre jogadores
+          lines.push("");
         });
       }
 
@@ -1327,9 +1299,8 @@
       window.open(url, "_blank");
     });
 
-    // Card em PNG (cores ajustadas para winners)
     function drawSummaryCard() {
-      recalc(); // garante prêmios atualizados
+      recalc();
 
       const ctx = summaryCanvas.getContext("2d");
       const width = summaryCanvas.width;
@@ -1360,7 +1331,6 @@
       const buyInValue = toNumber(state.settings.buyInValue);
       const rebuyValue = toNumber(state.settings.rebuyValue);
 
-      // Pote Total em negrito e azul/teal (nova cor)
       ctx.fillStyle = "#007aff";
       ctx.font = "bold 18px -apple-system, system-ui, sans-serif";
       ctx.fillText(`Pote Total: ${formatMoney(totalPot)}`, 40, y);
@@ -1390,7 +1360,6 @@
           return 0;
         });
 
-      // RANKING
       ctx.font = "italic bold 18px -apple-system, system-ui, sans-serif";
       ctx.fillStyle = "#111111";
       ctx.fillText("Ranking:", 40, y);
@@ -1419,11 +1388,12 @@
 
           const lineColor = getPlacementColor(place);
 
-          const prefix = icon + " " + name + " – Prêmio: " + formatMoney(placePrize) + " | ";
+          const basePrefix =
+            icon + " " + name + " – Prêmio: " + formatMoney(placePrize) + " ( ";
           ctx.fillStyle = lineColor;
           if (y >= height - 20) return;
-          ctx.fillText(prefix, 40, y);
-          const prefixWidth = ctx.measureText(prefix).width;
+          ctx.fillText(basePrefix, 40, y);
+          const prefixWidth = ctx.measureText(basePrefix).width;
 
           let resultText;
           let resultColor = "#111111";
@@ -1439,13 +1409,16 @@
 
           ctx.fillStyle = resultColor;
           ctx.fillText(resultText, 40 + prefixWidth, y);
+          const resultWidth = ctx.measureText(resultText).width;
+
+          ctx.fillStyle = lineColor;
+          ctx.fillText(" )", 40 + prefixWidth + resultWidth, y);
 
           y += 24;
         });
       }
 
       y += 20;
-      // Resultados detalhados
       ctx.font = "italic bold 18px -apple-system, system-ui, sans-serif";
       ctx.fillStyle = "#111111";
       ctx.fillText("Resultados detalhados:", 40, y);
@@ -1518,7 +1491,6 @@
       document.body.removeChild(link);
     });
 
-    // Listeners de settings
     buyInInput.addEventListener("change", () => {
       state.settings.buyInValue = toNumber(buyInInput.value, 0);
       saveState(state);
@@ -1533,14 +1505,19 @@
       recalc();
     });
 
-    buyInChipsInput.addEventListener("change", () => {
-      state.settings.buyInChips = toNumber(buyInChipsInput.value, 0);
+    function handleChipsInput(inputEl, key) {
+      const raw = inputEl.value;
+      const num = toNumber(raw, 0);
+      state.settings[key] = num;
+      inputEl.value = formatInt(num);
       saveState(state);
-    });
+    }
 
+    buyInChipsInput.addEventListener("change", () => {
+      handleChipsInput(buyInChipsInput, "buyInChips");
+    });
     rebuyChipsInput.addEventListener("change", () => {
-      state.settings.rebuyChips = toNumber(rebuyChipsInput.value, 0);
-      saveState(state);
+      handleChipsInput(rebuyChipsInput, "rebuyChips");
     });
 
     function updatePrizeSetting() {
@@ -1565,12 +1542,10 @@
       recalc();
     });
 
-    // Inicialização
     renderSettings();
     renderPlayers();
     recalc();
 
-    // PWA service worker (versionado)
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker
