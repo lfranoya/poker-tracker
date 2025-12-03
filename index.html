@@ -90,7 +90,7 @@
 
     /* Títulos principais dos “bubbles” */
     .card-title {
-      font-size: 17px;          /* +1 vs antes */
+      font-size: 17px;
       font-weight: 600;
       margin-bottom: 8px;
       display: flex;
@@ -103,7 +103,7 @@
 
     /* Subtítulos: Arrecadação, Prêmios, Ranking, Resultados detalhados */
     .card-title.sub-title {
-      font-size: 14px;          /* 1pt menor que os principais */
+      font-size: 14px;
       font-weight: 600;
       justify-content: flex-start;
       text-align: left;
@@ -238,7 +238,6 @@
       font-weight: 600;
     }
 
-    /* cores trocadas: parênteses vs Pote Total */
     .money-blue {
       color: #34a3dc;
     }
@@ -554,7 +553,7 @@
       </div>
     </section>
 
-    <!-- RESULTADOS (Ranking + Resultados detalhados) -->
+    <!-- RESULTADOS -->
     <section class="card">
       <div class="card-title" id="resultsTitle">Resultados</div>
 
@@ -585,7 +584,7 @@
   </footer>
 
   <script>
-    const APP_VERSION = "v1.4";
+    const APP_VERSION = "v1.4.1";
     const STORAGE_KEY = "poker_tracker_state_" + APP_VERSION;
     const THEME_KEY   = "poker_tracker_theme_" + APP_VERSION;
 
@@ -913,11 +912,11 @@
           const prefixText =
             `${namePlain} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) ` +
             `| RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) ` +
-            `| GASTO: ${formatMoney(p.totalSpent)}`;
+            `| Gasto: ${formatMoney(p.totalSpent)}`;
 
           let premioText = "";
           if (placePrize > 0) {
-            premioText = ` | PRÊMIO: ${formatMoney(placePrize)}`;
+            premioText = ` | Prêmio: ${formatMoney(placePrize)}`;
           }
 
           let resultClass = "pay-receive";
@@ -1202,7 +1201,7 @@
       lines.push(`Pote Total: ${formatMoney(totalPot)}`);
       lines.push(
         `Buy-Ins: ${totalBuyIns} (${formatMoney(totalBuyIns * buyInValue)}) · ` +
-        `Rebuys: ${formatMoney(totalRebuys * rebuyValue)}`
+        `Rebuys: ${totalRebuys} (${formatMoney(totalRebuys * rebuyValue)})`
       );
       lines.push("");
 
@@ -1262,7 +1261,7 @@
 
           let premioText = "";
           if (placePrize > 0) {
-            premioText = ` | PRÊMIO: ${formatMoney(placePrize)}`;
+            premioText = ` | Prêmio: ${formatMoney(placePrize)}`;
           }
 
           let resultadoText = "";
@@ -1277,7 +1276,7 @@
           lines.push(
             `${name} - BI: ${p.buyIns} (${formatMoney(totalBuyInValue)}) | ` +
             `RB: ${p.rebuys} (${formatMoney(totalRebuyValue)}) | ` +
-            `GASTO: ${formatMoney(p.totalSpent)}` +
+            `Gasto: ${formatMoney(p.totalSpent)}` +
             `${premioText}` +
             `${resultadoText}`
           );
@@ -1448,11 +1447,11 @@
             name +
             " - BI: " + p.buyIns + " (" + formatMoney(totalBuyInValue) + ")" +
             " | RB: " + p.rebuys + " (" + formatMoney(totalRebuyValue) + ")" +
-            " | GASTO: " + formatMoney(p.totalSpent);
+            " | Gasto: " + formatMoney(p.totalSpent);
 
           let prefixText = baseText;
           if (placePrize > 0) {
-            prefixText += " | PRÊMIO: " + formatMoney(placePrize);
+            prefixText += " | Prêmio: " + formatMoney(placePrize);
           }
 
           let resultSegment;
