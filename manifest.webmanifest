@@ -1,9 +1,10 @@
 {
   "name": "Poker Tracker",
   "short_name": "Poker",
-  "description": "Controle de buy-ins, rebuys e prêmios do home game.",
-  "start_url": ".",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
   "icons": [
