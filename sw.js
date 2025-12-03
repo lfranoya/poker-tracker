@@ -1,20 +1,19 @@
-// A versão vem da query string: sw.js?v=v1.0
-// Se por algum motivo não vier, cai no fallback "v1.0"
-const VERSION = new URL(self.location).searchParams.get("v") || "v1.0";
+// Service Worker Poker Tracker v2.5
+// Lê a versão a partir da query string (sw.js?v=v2.5)
+const VERSION = new URL(self.location).searchParams.get("v") || "v1";
 const CACHE_NAME = "poker-tracker-cache-" + VERSION;
 
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest"
-  // os ícones entram em cache quando forem usados
+  // ícones entram em cache quando usados
 ];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
   );
-  // força esse SW a ir para o estado "waiting" imediatamente
   self.skipWaiting();
 });
 
@@ -23,33 +22,30 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          // só mexe nos caches deste app
-          .filter((key) => key.startsWith("poker-tracker-cache-") && key !== CACHE_NAME)
+          .filter((key) => key !== CACHE_NAME)
           .map((key) => caches.delete(key))
       )
-    ).then(() => self.clients.claim())
+    )
   );
+  self.clients.claim();
 });
 
-// Regra:
-// - para páginas HTML (navegação), tenta REDE primeiro, cache só de fallback
-// - para o resto (CSS, JS, imagens), usa cache-then-network básico
+// Estratégia:
+// - HTML (navegação): rede primeiro, cache de fallback
+// - Restante (CSS/JS/img): cache primeiro, rede de fallback
 self.addEventListener("fetch", (event) => {
   const req = event.request;
-  const acceptHeader = req.headers.get("accept") || "";
-
-  const isHTMLRequest =
+  const accept = req.headers.get("accept") || "";
+  const isHTML =
     req.mode === "navigate" ||
-    acceptHeader.includes("text/html");
+    accept.includes("text/html");
 
-  if (isHTMLRequest) {
-    // HTML: sempre tentar buscar a versão nova no servidor
+  if (isHTML) {
     event.respondWith(
       fetch(req)
         .then((networkResp) => {
           const copy = networkResp.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            // garante que o index.html da nova versão está no cache correto
             cache.put("./index.html", copy);
           });
           return networkResp;
@@ -57,14 +53,10 @@ self.addEventListener("fetch", (event) => {
         .catch(() => caches.match("./index.html"))
     );
   } else {
-    // Outros arquivos: cache primeiro, depois rede
     event.respondWith(
       caches.match(req).then((cached) => {
         if (cached) return cached;
-        return fetch(req).catch(() => {
-          // fallback genérico
-          return caches.match("./index.html");
-        });
+        return fetch(req).catch(() => caches.match("./index.html"));
       })
     );
   }
